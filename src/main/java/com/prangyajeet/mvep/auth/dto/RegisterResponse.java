@@ -1,11 +1,14 @@
 package com.prangyajeet.mvep.auth.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-
-@Getter
-@AllArgsConstructor
 public class RegisterResponse {
 
     private String message;
+
+    public RegisterResponse(String message) {
+        this.message = message;
+    }
+
+    public String getMessage() {
+        return message;
+    }
 }
