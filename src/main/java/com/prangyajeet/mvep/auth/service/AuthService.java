@@ -4,6 +4,7 @@ import com.prangyajeet.mvep.auth.dto.LoginRequest;
 import com.prangyajeet.mvep.auth.dto.LoginResponse;
 import com.prangyajeet.mvep.auth.dto.RegisterRequest;
 import com.prangyajeet.mvep.auth.dto.RegisterResponse;
+import com.prangyajeet.mvep.security.JwtUtil;
 import com.prangyajeet.mvep.user.entity.Role;
 import com.prangyajeet.mvep.user.entity.User;
 import com.prangyajeet.mvep.user.repository.RoleRepository;
@@ -19,13 +20,16 @@ public class AuthService {
     private final UserService userService;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtUtil jwtUtil;
 
     public AuthService(UserService userService,
                        RoleRepository roleRepository,
-                       PasswordEncoder passwordEncoder) {
+                       PasswordEncoder passwordEncoder,
+                       JwtUtil jwtUtil) {
         this.userService = userService;
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
+        this.jwtUtil = jwtUtil;
     }
 
     public boolean isEmailAlreadyRegistered(String email) {
@@ -59,18 +63,34 @@ public class AuthService {
 
     public LoginResponse login(LoginRequest request) {
 
-        Optional<User> userOptional = userService.findByEmail(request.getEmail());
+        Optional<User> userOptional =
+                userService.findByEmail(request.getEmail());
 
         if (userOptional.isEmpty()) {
-            return new LoginResponse("Invalid email or password");
+            return new LoginResponse(
+                    "Invalid email or password",
+                    null
+            );
         }
 
         User user = userOptional.get();
 
-        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            return new LoginResponse("Invalid email or password");
+        if (!passwordEncoder.matches(
+                request.getPassword(),
+                user.getPassword())) {
+
+            return new LoginResponse(
+                    "Invalid email or password",
+                    null
+            );
         }
 
-        return new LoginResponse("Login successful");
+        String token =
+                jwtUtil.generateToken(user.getEmail());
+
+        return new LoginResponse(
+                "Login successful",
+                token
+        );
     }
 }
