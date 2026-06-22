@@ -10,10 +10,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
 @Component
-public class JwtUtil 
-{
-	
-	
+public class JwtUtil {
 
     private static final String SECRET_KEY =
             "mySecretKeyForJwtAuthentication123456789mySecretKey";
@@ -26,10 +23,11 @@ public class JwtUtil
                     SECRET_KEY.getBytes(StandardCharsets.UTF_8)
             );
 
-    public String generateToken(String email) {
+    public String generateToken(String email, String role) {
 
         return Jwts.builder()
                 .subject(email)
+                .claim("role", role)
                 .issuedAt(new Date())
                 .expiration(
                         new Date(
@@ -51,7 +49,18 @@ public class JwtUtil
 
         return claims.getSubject();
     }
-    
+
+    public String extractRole(String token) {
+
+        Claims claims = Jwts.parser()
+                .verifyWith(key)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
+
+        return claims.get("role", String.class);
+    }
+
     public boolean validateToken(String token) {
 
         try {

@@ -51,22 +51,30 @@ public class AuthService {
         user.setLastName(request.getLastName());
         user.setEmail(request.getEmail());
 
-        // Encrypt password before saving
-        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        user.setPassword(
+                passwordEncoder.encode(
+                        request.getPassword()
+                )
+        );
 
         user.setRole(role);
 
         userService.save(user);
 
-        return new RegisterResponse("Registration successful");
+        return new RegisterResponse(
+                "Registration successful"
+        );
     }
 
     public LoginResponse login(LoginRequest request) {
 
         Optional<User> userOptional =
-                userService.findByEmail(request.getEmail());
+                userService.findByEmail(
+                        request.getEmail()
+                );
 
         if (userOptional.isEmpty()) {
+
             return new LoginResponse(
                     "Invalid email or password",
                     null
@@ -85,8 +93,10 @@ public class AuthService {
             );
         }
 
-        String token =
-                jwtUtil.generateToken(user.getEmail());
+        String token = jwtUtil.generateToken(
+                user.getEmail(),
+                user.getRole().getName().toString()
+        );
 
         return new LoginResponse(
                 "Login successful",

@@ -1,19 +1,10 @@
 package com.prangyajeet.mvep.user.entity;
 
 import com.prangyajeet.mvep.common.enums.RoleName;
-
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @Entity
 @Table(name = "roles")
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
 public class Role {
 
     @Id
@@ -23,4 +14,28 @@ public class Role {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, unique = true)
     private RoleName name;
+
+    public Role() {
+    }
+
+    public Role(Long id, RoleName name) {
+        this.id = id;
+        this.name = name;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public RoleName getName() {
+        return name;
+    }
+
+    public void setName(RoleName name) {
+        this.name = name;
+    }
 }
