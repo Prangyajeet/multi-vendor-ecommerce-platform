@@ -1,7 +1,7 @@
+import AppRoutes from "./routes/AppRoutes";
+
 function App() {
-  return (
-    <h1>Multi Vendor Ecommerce</h1>
-  );
+  return <AppRoutes />;
 }
 
 export default App;
