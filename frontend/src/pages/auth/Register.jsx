@@ -1,9 +1,10 @@
 import AuthLayout from "../../layouts/AuthLayout";
+import RegisterForm from "../../components/auth/RegisterForm";
 
 function Register() {
   return (
     <AuthLayout>
-      <h1>Register Page</h1>
+      <RegisterForm />
     </AuthLayout>
   );
 }
