@@ -77,6 +77,9 @@ public class AuthService {
 
             return new LoginResponse(
                     "Invalid email or password",
+                    null,
+                    null,
+                    null,
                     null
             );
         }
@@ -89,6 +92,9 @@ public class AuthService {
 
             return new LoginResponse(
                     "Invalid email or password",
+                    null,
+                    null,
+                    null,
                     null
             );
         }
@@ -100,7 +106,10 @@ public class AuthService {
 
         return new LoginResponse(
                 "Login successful",
-                token
+                token,
+                user.getId(),
+                user.getEmail(),
+                user.getRole().getName().toString()
         );
     }
 }
