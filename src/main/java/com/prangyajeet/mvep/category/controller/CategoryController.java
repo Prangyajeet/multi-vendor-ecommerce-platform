@@ -2,6 +2,7 @@ package com.prangyajeet.mvep.category.controller;
 
 import com.prangyajeet.mvep.category.entity.Category;
 import com.prangyajeet.mvep.category.service.CategoryService;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,6 +18,7 @@ public class CategoryController {
     }
 
     @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
     public Category createCategory(@RequestBody Category category) {
         return categoryService.createCategory(category);
     }
