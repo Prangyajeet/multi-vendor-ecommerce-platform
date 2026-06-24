@@ -12,7 +12,12 @@ function RegisterForm() {
       <div className="space-y-4">
 
         <Input
-          label="Name"
+          label="First Name"
+          placeholder="Enter first name"
+        />
+
+        <Input
+          label="Last Name"
           placeholder="Enter name"
         />
 
@@ -32,6 +37,16 @@ function RegisterForm() {
           type="password"
           placeholder="Confirm Password"
         />
+
+      <div className="flex flex-col gap-2">
+        <label>Role</label>
+
+        <select className="border rounded-lg p-2">
+        <option value="CUSTOMER">Customer</option>
+        <option value="VENDOR">Vendor</option>
+        <option value="ADMIN">Admin</option>
+        </select>
+      </div>
 
         <Button className="w-full">
           Register
