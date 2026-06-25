@@ -1,5 +1,6 @@
 package com.prangyajeet.mvep.order.entity;
 
+import com.prangyajeet.mvep.common.enums.OrderStatus;
 import com.prangyajeet.mvep.user.entity.User;
 import jakarta.persistence.*;
 
@@ -21,8 +22,9 @@ public class Order {
     @Column(nullable = false)
     private BigDecimal totalAmount;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private String orderStatus;
+    private OrderStatus orderStatus;
 
     @Column(nullable = false)
     private LocalDateTime orderDate;
@@ -30,8 +32,12 @@ public class Order {
     public Order() {
     }
 
-    public Order(Long id, User user, BigDecimal totalAmount,
-                 String orderStatus, LocalDateTime orderDate) {
+    public Order(Long id,
+                 User user,
+                 BigDecimal totalAmount,
+                 OrderStatus orderStatus,
+                 LocalDateTime orderDate) {
+
         this.id = id;
         this.user = user;
         this.totalAmount = totalAmount;
@@ -63,11 +69,11 @@ public class Order {
         this.totalAmount = totalAmount;
     }
 
-    public String getOrderStatus() {
+    public OrderStatus getOrderStatus() {
         return orderStatus;
     }
 
-    public void setOrderStatus(String orderStatus) {
+    public void setOrderStatus(OrderStatus orderStatus) {
         this.orderStatus = orderStatus;
     }
 

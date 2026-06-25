@@ -7,6 +7,7 @@ import com.prangyajeet.mvep.order.repository.OrderRepository;
 import com.prangyajeet.mvep.user.entity.User;
 import com.prangyajeet.mvep.user.repository.UserRepository;
 import org.springframework.stereotype.Service;
+import com.prangyajeet.mvep.common.enums.OrderStatus;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -34,7 +35,7 @@ public class OrderService {
 
         order.setUser(user);
         order.setTotalAmount(requestDTO.getTotalAmount());
-        order.setOrderStatus("PLACED");
+        order.setOrderStatus(OrderStatus.PLACED);
         order.setOrderDate(LocalDateTime.now());
 
         Order savedOrder = orderRepository.save(order);
