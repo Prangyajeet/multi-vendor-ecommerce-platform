@@ -26,6 +26,7 @@ public class AuthService {
                        RoleRepository roleRepository,
                        PasswordEncoder passwordEncoder,
                        JwtUtil jwtUtil) {
+
         this.userService = userService;
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
@@ -42,36 +43,36 @@ public class AuthService {
             return new RegisterResponse("Email already exists");
         }
 
+        if (userService.phoneNumberExists(request.getPhoneNumber())) {
+            return new RegisterResponse("Phone number already exists");
+        }
+
         Role role = roleRepository.findByName(request.getRole())
-                .orElseThrow(() -> new RuntimeException("Role not found"));
+                .orElseThrow(() ->
+                        new RuntimeException("Role not found"));
 
         User user = new User();
 
         user.setFirstName(request.getFirstName());
         user.setLastName(request.getLastName());
         user.setEmail(request.getEmail());
+        user.setPhoneNumber(request.getPhoneNumber());
 
         user.setPassword(
-                passwordEncoder.encode(
-                        request.getPassword()
-                )
+                passwordEncoder.encode(request.getPassword())
         );
 
         user.setRole(role);
 
         userService.save(user);
 
-        return new RegisterResponse(
-                "Registration successful"
-        );
+        return new RegisterResponse("Registration successful");
     }
 
     public LoginResponse login(LoginRequest request) {
 
         Optional<User> userOptional =
-                userService.findByEmail(
-                        request.getEmail()
-                );
+                userService.findByEmail(request.getEmail());
 
         if (userOptional.isEmpty()) {
 

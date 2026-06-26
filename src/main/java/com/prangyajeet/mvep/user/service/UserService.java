@@ -19,8 +19,16 @@ public class UserService {
         return userRepository.findByEmail(email);
     }
 
+    public Optional<User> findByPhoneNumber(String phoneNumber) {
+        return userRepository.findByPhoneNumber(phoneNumber);
+    }
+
     public boolean emailExists(String email) {
         return userRepository.existsByEmail(email);
+    }
+
+    public boolean phoneNumberExists(String phoneNumber) {
+        return userRepository.existsByPhoneNumber(phoneNumber);
     }
 
     public User save(User user) {
