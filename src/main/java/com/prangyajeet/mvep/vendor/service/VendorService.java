@@ -23,11 +23,29 @@ public class VendorService {
         this.userRepository = userRepository;
     }
 
+    // ==========================
+    // CREATE VENDOR
+    // ==========================
+
     public VendorResponseDTO createVendor(VendorRequestDTO requestDTO) {
+
+        if (requestDTO.getUserId() == null) {
+            throw new RuntimeException("User Id is required");
+        }
 
         User user = userRepository.findById(requestDTO.getUserId())
                 .orElseThrow(() ->
                         new RuntimeException("User not found"));
+
+        if (vendorRepository.findByUserId(user.getId()).isPresent()) {
+            throw new RuntimeException("Vendor already exists for this user");
+        }
+
+        if (requestDTO.getGstNumber() != null &&
+                vendorRepository.findByGstNumber(requestDTO.getGstNumber()).isPresent()) {
+
+            throw new RuntimeException("GST Number already exists");
+        }
 
         Vendor vendor = new Vendor();
 
@@ -41,6 +59,10 @@ public class VendorService {
         return mapToResponseDTO(savedVendor);
     }
 
+    // ==========================
+    // GET ALL
+    // ==========================
+
     public List<VendorResponseDTO> getAllVendors() {
 
         return vendorRepository.findAll()
@@ -49,24 +71,69 @@ public class VendorService {
                 .collect(Collectors.toList());
     }
 
+    // ==========================
+    // GET BY ID
+    // ==========================
+
+    public VendorResponseDTO getVendorById(Long id) {
+
+        Vendor vendor = vendorRepository.findById(id)
+                .orElseThrow(() ->
+                        new RuntimeException("Vendor not found"));
+
+        return mapToResponseDTO(vendor);
+    }
+
+    // ==========================
+    // UPDATE
+    // ==========================
+
+    public VendorResponseDTO updateVendor(Long id,
+                                          VendorRequestDTO requestDTO) {
+
+        Vendor vendor = vendorRepository.findById(id)
+                .orElseThrow(() ->
+                        new RuntimeException("Vendor not found"));
+
+        vendor.setBusinessName(requestDTO.getBusinessName());
+        vendor.setBusinessAddress(requestDTO.getBusinessAddress());
+        vendor.setGstNumber(requestDTO.getGstNumber());
+
+        Vendor updatedVendor = vendorRepository.save(vendor);
+
+        return mapToResponseDTO(updatedVendor);
+    }
+
+    // ==========================
+    // DELETE
+    // ==========================
+
+    public void deleteVendor(Long id) {
+
+        Vendor vendor = vendorRepository.findById(id)
+                .orElseThrow(() ->
+                        new RuntimeException("Vendor not found"));
+
+        vendorRepository.delete(vendor);
+    }
+
+    // ==========================
+    // DTO MAPPER
+    // ==========================
+
     private VendorResponseDTO mapToResponseDTO(Vendor vendor) {
 
-        VendorResponseDTO responseDTO =
-                new VendorResponseDTO();
+        VendorResponseDTO responseDTO = new VendorResponseDTO();
 
         responseDTO.setId(vendor.getId());
         responseDTO.setBusinessName(vendor.getBusinessName());
         responseDTO.setBusinessAddress(vendor.getBusinessAddress());
         responseDTO.setGstNumber(vendor.getGstNumber());
 
-        responseDTO.setUserId(
-                vendor.getUser().getId()
-        );
-
-        responseDTO.setUserEmail(
-                vendor.getUser().getEmail()
-        );
+        responseDTO.setUserId(vendor.getUser().getId());
+        responseDTO.setUserEmail(vendor.getUser().getEmail());
 
         return responseDTO;
     }
+
 }

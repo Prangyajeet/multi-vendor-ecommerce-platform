@@ -18,7 +18,7 @@ public class CategoryService {
     public Category createCategory(Category category) {
 
         if (categoryRepository.findByName(category.getName()).isPresent()) {
-            throw new RuntimeException("Category already exists");
+            throw new IllegalArgumentException("Category already exists");
         }
 
         return categoryRepository.save(category);
@@ -27,4 +27,33 @@ public class CategoryService {
     public List<Category> getAllCategories() {
         return categoryRepository.findAll();
     }
+
+    public Category getCategoryById(Long id) {
+
+        return categoryRepository.findById(id)
+                .orElseThrow(() ->
+                        new RuntimeException("Category not found"));
+    }
+
+    public Category updateCategory(Long id, Category category) {
+
+        Category existing = categoryRepository.findById(id)
+                .orElseThrow(() ->
+                        new RuntimeException("Category not found"));
+
+        existing.setName(category.getName());
+        existing.setDescription(category.getDescription());
+
+        return categoryRepository.save(existing);
+    }
+
+    public void deleteCategory(Long id) {
+
+        Category category = categoryRepository.findById(id)
+                .orElseThrow(() ->
+                        new RuntimeException("Category not found"));
+
+        categoryRepository.delete(category);
+    }
+
 }

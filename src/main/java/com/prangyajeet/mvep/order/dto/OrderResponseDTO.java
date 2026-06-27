@@ -1,5 +1,7 @@
 package com.prangyajeet.mvep.order.dto;
 
+import com.prangyajeet.mvep.common.enums.OrderStatus;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
@@ -9,7 +11,9 @@ public class OrderResponseDTO {
     private Long userId;
 
     private BigDecimal totalAmount;
-    private String orderStatus;
+
+    private OrderStatus orderStatus;
+
     private LocalDateTime orderDate;
 
     public OrderResponseDTO() {
@@ -39,11 +43,11 @@ public class OrderResponseDTO {
         this.totalAmount = totalAmount;
     }
 
-    public String getOrderStatus() {
+    public OrderStatus getOrderStatus() {
         return orderStatus;
     }
 
-    public void setOrderStatus(String orderStatus) {
+    public void setOrderStatus(OrderStatus orderStatus) {
         this.orderStatus = orderStatus;
     }
 
