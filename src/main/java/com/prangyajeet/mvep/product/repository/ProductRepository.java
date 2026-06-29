@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.math.BigDecimal;
 
 public interface ProductRepository extends JpaRepository<Product, Long> {
 
@@ -13,5 +14,11 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
     @Query("SELECT p FROM Product p WHERE p.vendor.id = :vendorId")
     List<Product> findProductsByVendorId(@Param("vendorId") Long vendorId);
+    
+    List<Product> findByNameContainingIgnoreCase(String keyword);
+    List<Product> findByPriceBetween(
+            BigDecimal minPrice,
+            BigDecimal maxPrice
+    );
 
 }

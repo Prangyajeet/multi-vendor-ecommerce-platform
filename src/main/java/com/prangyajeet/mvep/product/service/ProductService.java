@@ -2,14 +2,22 @@ package com.prangyajeet.mvep.product.service;
 
 import com.prangyajeet.mvep.category.entity.Category;
 import com.prangyajeet.mvep.category.repository.CategoryRepository;
+import com.prangyajeet.mvep.exception.CategoryNotFoundException;
+import com.prangyajeet.mvep.exception.ProductNotFoundException;
+import com.prangyajeet.mvep.exception.VendorNotFoundException;
 import com.prangyajeet.mvep.product.dto.ProductRequestDTO;
 import com.prangyajeet.mvep.product.dto.ProductResponseDTO;
 import com.prangyajeet.mvep.product.entity.Product;
 import com.prangyajeet.mvep.product.repository.ProductRepository;
 import com.prangyajeet.mvep.vendor.entity.Vendor;
 import com.prangyajeet.mvep.vendor.repository.VendorRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -33,12 +41,18 @@ public class ProductService {
         Category category = categoryRepository.findById(
                 requestDTO.getCategoryId()
         ).orElseThrow(() ->
-                new RuntimeException("Category not found"));
+                new CategoryNotFoundException(
+                        "Category not found with id : "
+                                + requestDTO.getCategoryId()
+                ));
 
         Vendor vendor = vendorRepository.findById(
                 requestDTO.getVendorId()
         ).orElseThrow(() ->
-                new RuntimeException("Vendor not found"));
+                new VendorNotFoundException(
+                        "Vendor not found with id : "
+                                + requestDTO.getVendorId()
+                ));
 
         Product product = new Product();
 
@@ -67,7 +81,9 @@ public class ProductService {
 
         Product product = productRepository.findById(id)
                 .orElseThrow(() ->
-                        new RuntimeException("Product not found"));
+                        new ProductNotFoundException(
+                                "Product not found with id : " + id
+                        ));
 
         return mapToResponseDTO(product);
     }
@@ -92,22 +108,96 @@ public class ProductService {
                 .collect(Collectors.toList());
     }
 
-    public ProductResponseDTO updateProduct(Long id,
-                                            ProductRequestDTO requestDTO) {
+    public List<ProductResponseDTO> searchProducts(String keyword) {
+
+        List<Product> products =
+                productRepository.findByNameContainingIgnoreCase(keyword);
+
+        return products.stream()
+                .map(this::mapToResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    // ===========================
+    // PAGINATION
+    // ===========================
+
+    public Page<ProductResponseDTO> getProductsWithPagination(
+            int page,
+            int size) {
+
+        Pageable pageable = PageRequest.of(page, size);
+
+        Page<Product> productPage =
+                productRepository.findAll(pageable);
+
+        return productPage.map(this::mapToResponseDTO);
+    }
+
+    // ===========================
+    // PAGINATION WITH SORTING
+    // ===========================
+
+    public Page<ProductResponseDTO> getProductsWithSorting(
+            int page,
+            int size,
+            String sortBy,
+            String direction) {
+
+        Sort sort = direction.equalsIgnoreCase("desc")
+                ? Sort.by(sortBy).descending()
+                : Sort.by(sortBy).ascending();
+
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        Page<Product> productPage =
+                productRepository.findAll(pageable);
+
+        return productPage.map(this::mapToResponseDTO);
+    }    // ===========================
+    // FILTER PRODUCTS BY PRICE
+    // ===========================
+
+    public List<ProductResponseDTO> filterProductsByPrice(
+            BigDecimal minPrice,
+            BigDecimal maxPrice) {
+
+        List<Product> products =
+                productRepository.findByPriceBetween(
+                        minPrice,
+                        maxPrice
+                );
+
+        return products.stream()
+                .map(this::mapToResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    public ProductResponseDTO updateProduct(
+            Long id,
+            ProductRequestDTO requestDTO) {
 
         Product existingProduct = productRepository.findById(id)
                 .orElseThrow(() ->
-                        new RuntimeException("Product not found"));
+                        new ProductNotFoundException(
+                                "Product not found with id : " + id
+                        ));
 
         Category category = categoryRepository.findById(
                 requestDTO.getCategoryId()
         ).orElseThrow(() ->
-                new RuntimeException("Category not found"));
+                new CategoryNotFoundException(
+                        "Category not found with id : "
+                                + requestDTO.getCategoryId()
+                ));
 
         Vendor vendor = vendorRepository.findById(
                 requestDTO.getVendorId()
         ).orElseThrow(() ->
-                new RuntimeException("Vendor not found"));
+                new VendorNotFoundException(
+                        "Vendor not found with id : "
+                                + requestDTO.getVendorId()
+                ));
 
         existingProduct.setName(requestDTO.getName());
         existingProduct.setDescription(requestDTO.getDescription());
@@ -127,7 +217,9 @@ public class ProductService {
 
         Product product = productRepository.findById(id)
                 .orElseThrow(() ->
-                        new RuntimeException("Product not found"));
+                        new ProductNotFoundException(
+                                "Product not found with id : " + id
+                        ));
 
         productRepository.delete(product);
     }
@@ -148,7 +240,6 @@ public class ProductService {
         responseDTO.setCategoryName(product.getCategory().getName());
 
         if (product.getVendor() != null) {
-
             responseDTO.setVendorId(product.getVendor().getId());
             responseDTO.setVendorName(product.getVendor().getBusinessName());
         }
