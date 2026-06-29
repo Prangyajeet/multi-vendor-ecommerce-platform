@@ -63,6 +63,35 @@ public class ProductService {
                 .collect(Collectors.toList());
     }
 
+    public ProductResponseDTO getProductById(Long id) {
+
+        Product product = productRepository.findById(id)
+                .orElseThrow(() ->
+                        new RuntimeException("Product not found"));
+
+        return mapToResponseDTO(product);
+    }
+
+    public List<ProductResponseDTO> getProductsByCategory(Long categoryId) {
+
+        List<Product> products =
+                productRepository.findByCategoryId(categoryId);
+
+        return products.stream()
+                .map(this::mapToResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    public List<ProductResponseDTO> getProductsByVendor(Long vendorId) {
+
+        List<Product> products =
+                productRepository.findProductsByVendorId(vendorId);
+
+        return products.stream()
+                .map(this::mapToResponseDTO)
+                .collect(Collectors.toList());
+    }
+
     public ProductResponseDTO updateProduct(Long id,
                                             ProductRequestDTO requestDTO) {
 
@@ -112,28 +141,16 @@ public class ProductService {
         responseDTO.setName(product.getName());
         responseDTO.setDescription(product.getDescription());
         responseDTO.setPrice(product.getPrice());
-        responseDTO.setStockQuantity(
-                product.getStockQuantity()
-        );
+        responseDTO.setStockQuantity(product.getStockQuantity());
         responseDTO.setImageUrl(product.getImageUrl());
 
-        responseDTO.setCategoryId(
-                product.getCategory().getId()
-        );
-
-        responseDTO.setCategoryName(
-                product.getCategory().getName()
-        );
+        responseDTO.setCategoryId(product.getCategory().getId());
+        responseDTO.setCategoryName(product.getCategory().getName());
 
         if (product.getVendor() != null) {
 
-            responseDTO.setVendorId(
-                    product.getVendor().getId()
-            );
-
-            responseDTO.setVendorName(
-                    product.getVendor().getBusinessName()
-            );
+            responseDTO.setVendorId(product.getVendor().getId());
+            responseDTO.setVendorName(product.getVendor().getBusinessName());
         }
 
         return responseDTO;

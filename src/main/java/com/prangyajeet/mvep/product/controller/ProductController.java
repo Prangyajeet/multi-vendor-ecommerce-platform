@@ -30,6 +30,26 @@ public class ProductController {
         return productService.getAllProducts();
     }
 
+    @GetMapping("/{id}")
+    public ProductResponseDTO getProductById(@PathVariable Long id) {
+
+        return productService.getProductById(id);
+    }
+
+    @GetMapping("/category/{categoryId}")
+    public List<ProductResponseDTO> getProductsByCategory(
+            @PathVariable Long categoryId) {
+
+        return productService.getProductsByCategory(categoryId);
+    }
+
+    @GetMapping("/vendor/{vendorId}")
+    public List<ProductResponseDTO> getProductsByVendor(
+            @PathVariable Long vendorId) {
+
+        return productService.getProductsByVendor(vendorId);
+    }
+
     @PutMapping("/{id}")
     public ProductResponseDTO updateProduct(
             @PathVariable Long id,
