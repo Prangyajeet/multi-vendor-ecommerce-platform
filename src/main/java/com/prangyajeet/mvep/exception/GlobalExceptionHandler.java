@@ -12,6 +12,7 @@ import com.prangyajeet.mvep.exception.VendorNotFoundException;
 import com.prangyajeet.mvep.exception.CartAlreadyExistsException;
 import com.prangyajeet.mvep.exception.CartNotFoundException;
 import com.prangyajeet.mvep.exception.InsufficientStockException;
+import com.prangyajeet.mvep.exception.WishlistNotFoundException;
 
 import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
@@ -205,6 +206,22 @@ public ResponseEntity<Map<String, Object>> handleInsufficientStockException(
         return new ResponseEntity<>(
                 response,
                 HttpStatus.INTERNAL_SERVER_ERROR
+        );
+    }
+    
+    @ExceptionHandler(WishlistNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleWishlistNotFoundException(
+            WishlistNotFoundException ex) {
+
+        Map<String, Object> response = new LinkedHashMap<>();
+
+        response.put("timestamp", LocalDateTime.now());
+        response.put("status", HttpStatus.NOT_FOUND.value());
+        response.put("message", ex.getMessage());
+
+        return new ResponseEntity<>(
+                response,
+                HttpStatus.NOT_FOUND
         );
     }
 }
