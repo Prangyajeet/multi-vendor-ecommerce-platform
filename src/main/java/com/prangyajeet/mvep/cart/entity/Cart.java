@@ -5,7 +5,17 @@ import com.prangyajeet.mvep.user.entity.User;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "cart_items")
+@Table(
+        name = "cart_items",
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        columnNames = {
+                                "user_id",
+                                "product_id"
+                        }
+                )
+        }
+)
 public class Cart {
 
     @Id

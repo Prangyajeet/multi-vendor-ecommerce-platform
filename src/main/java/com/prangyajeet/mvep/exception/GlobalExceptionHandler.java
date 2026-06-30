@@ -9,6 +9,9 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import com.prangyajeet.mvep.exception.CategoryNotFoundException;
 import com.prangyajeet.mvep.exception.ProductNotFoundException;
 import com.prangyajeet.mvep.exception.VendorNotFoundException;
+import com.prangyajeet.mvep.exception.CartAlreadyExistsException;
+import com.prangyajeet.mvep.exception.CartNotFoundException;
+import com.prangyajeet.mvep.exception.InsufficientStockException;
 
 import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
@@ -103,6 +106,67 @@ public class GlobalExceptionHandler {
              HttpStatus.NOT_FOUND
      );
  }
+ 
+//===========================================
+//CART NOT FOUND
+//===========================================
+
+@ExceptionHandler(CartNotFoundException.class)
+public ResponseEntity<Map<String, Object>> handleCartNotFoundException(
+      CartNotFoundException ex) {
+
+  Map<String, Object> response = new LinkedHashMap<>();
+
+  response.put("timestamp", LocalDateTime.now());
+  response.put("status", HttpStatus.NOT_FOUND.value());
+  response.put("message", ex.getMessage());
+
+  return new ResponseEntity<>(
+          response,
+          HttpStatus.NOT_FOUND
+  );
+}
+
+//===========================================
+//CART ALREADY EXISTS
+//===========================================
+
+@ExceptionHandler(CartAlreadyExistsException.class)
+public ResponseEntity<Map<String, Object>> handleCartAlreadyExistsException(
+     CartAlreadyExistsException ex) {
+
+ Map<String, Object> response = new LinkedHashMap<>();
+
+ response.put("timestamp", LocalDateTime.now());
+ response.put("status", HttpStatus.CONFLICT.value());
+ response.put("message", ex.getMessage());
+
+ return new ResponseEntity<>(
+         response,
+         HttpStatus.CONFLICT
+ );
+}
+
+//===========================================
+//INSUFFICIENT STOCK
+//===========================================
+
+@ExceptionHandler(InsufficientStockException.class)
+public ResponseEntity<Map<String, Object>> handleInsufficientStockException(
+     InsufficientStockException ex) {
+
+ Map<String, Object> response = new LinkedHashMap<>();
+
+ response.put("timestamp", LocalDateTime.now());
+ response.put("status", HttpStatus.BAD_REQUEST.value());
+ response.put("message", ex.getMessage());
+
+ return new ResponseEntity<>(
+         response,
+         HttpStatus.BAD_REQUEST
+ );
+}
+
 
     // ===========================================
     // RUNTIME EXCEPTION
