@@ -11,6 +11,7 @@ function RegisterForm() {
     password: "",
     confirmPassword: "",
     role: "CUSTOMER",
+    phoneNumber: "",
   });
 
   const handleChange = (e) => {
@@ -34,6 +35,7 @@ function RegisterForm() {
       email: formData.email,
       password: formData.password,
       role: formData.role,
+      phoneNumber: formData.phoneNumber,
     };
 
     try {
@@ -48,6 +50,7 @@ function RegisterForm() {
         password: "",
         confirmPassword: "",
         role: "CUSTOMER",
+        phoneNumber: "",
       });
 
     } catch (error) {
@@ -131,6 +134,14 @@ function RegisterForm() {
             <option value="ADMIN">Admin</option>
           </select>
         </div>
+        <Input
+          label="Mobile Number"
+          name="phoneNumber"
+          type="number"
+          placeholder="Mobile Number"
+          value={formData.phoneNumber}
+          onChange={handleChange}
+        />
 
         <Button
           type="submit"
