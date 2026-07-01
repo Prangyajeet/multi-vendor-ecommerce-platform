@@ -13,6 +13,8 @@ import com.prangyajeet.mvep.exception.CartAlreadyExistsException;
 import com.prangyajeet.mvep.exception.CartNotFoundException;
 import com.prangyajeet.mvep.exception.InsufficientStockException;
 import com.prangyajeet.mvep.exception.WishlistNotFoundException;
+import com.prangyajeet.mvep.exception.ReviewAlreadyExistsException;
+import com.prangyajeet.mvep.exception.ReviewNotFoundException;
 
 import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
@@ -222,6 +224,38 @@ public ResponseEntity<Map<String, Object>> handleInsufficientStockException(
         return new ResponseEntity<>(
                 response,
                 HttpStatus.NOT_FOUND
+        );
+    }
+    
+    @ExceptionHandler(ReviewNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleReviewNotFoundException(
+            ReviewNotFoundException ex) {
+
+        Map<String, Object> response = new LinkedHashMap<>();
+
+        response.put("timestamp", LocalDateTime.now());
+        response.put("status", HttpStatus.NOT_FOUND.value());
+        response.put("message", ex.getMessage());
+
+        return new ResponseEntity<>(
+                response,
+                HttpStatus.NOT_FOUND
+        );
+    } 
+    
+    @ExceptionHandler(ReviewAlreadyExistsException.class)
+    public ResponseEntity<Map<String, Object>> handleReviewAlreadyExistsException(
+            ReviewAlreadyExistsException ex) {
+
+        Map<String, Object> response = new LinkedHashMap<>();
+
+        response.put("timestamp", LocalDateTime.now());
+        response.put("status", HttpStatus.BAD_REQUEST.value());
+        response.put("message", ex.getMessage());
+
+        return new ResponseEntity<>(
+                response,
+                HttpStatus.BAD_REQUEST
         );
     }
 }

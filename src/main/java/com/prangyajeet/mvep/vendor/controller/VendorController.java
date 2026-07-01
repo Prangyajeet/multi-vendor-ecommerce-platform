@@ -1,4 +1,4 @@
-package com.prangyajeet.mvep.vendor;
+package com.prangyajeet.mvep.vendor.controller;
 
 import com.prangyajeet.mvep.vendor.dto.VendorRequestDTO;
 import com.prangyajeet.mvep.vendor.dto.VendorResponseDTO;
