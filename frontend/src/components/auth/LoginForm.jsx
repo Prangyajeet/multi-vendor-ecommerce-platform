@@ -1,12 +1,17 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+
 import Input from "../common/Input";
 import Button from "../common/Button";
+
 import { loginUser } from "../../services/AuthService";
+import useAuthStore from "../../store/authStore";
 
 function LoginForm() {
 
   const navigate = useNavigate();
+
+  const login = useAuthStore((state) => state.login);
 
   const [formData, setFormData] = useState({
     email: "",
@@ -27,12 +32,19 @@ function LoginForm() {
 
       const response = await loginUser(formData);
 
-      const { token, userId, email, role } = response.data;
+      const {
+        token,
+        userId,
+        email,
+        role,
+      } = response.data;
 
-      localStorage.setItem("token", token);
-      localStorage.setItem("userId", userId);
-      localStorage.setItem("email", email);
-      localStorage.setItem("role", role);
+      login({
+        token,
+        userId,
+        email,
+        role,
+      });
 
       alert(response.data.message);
 
@@ -57,7 +69,7 @@ function LoginForm() {
     } catch (error) {
 
       if (error.response) {
-        alert(error.response.data);
+        alert(error.response.data.message || error.response.data);
       } else {
         alert("Login Failed");
       }
@@ -105,7 +117,6 @@ function LoginForm() {
       </div>
 
     </form>
-
   );
 }
 
