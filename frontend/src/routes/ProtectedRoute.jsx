@@ -1,9 +1,9 @@
 import { Navigate } from "react-router-dom";
+import useAuthStore from "../store/authStore";
 
 function ProtectedRoute({ children, allowedRoles }) {
 
-  const token = localStorage.getItem("token");
-  const role = localStorage.getItem("role");
+  const { token, role } = useAuthStore();
 
   if (!token) {
     return <Navigate to="/login" replace />;
