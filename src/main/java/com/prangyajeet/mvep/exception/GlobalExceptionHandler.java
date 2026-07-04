@@ -18,6 +18,12 @@ import com.prangyajeet.mvep.exception.ReviewNotFoundException;
 import com.prangyajeet.mvep.exception.ProductNotPurchasedException;
 import com.prangyajeet.mvep.exception.UnauthorizedReviewException;
 import com.prangyajeet.mvep.exception.UserNotFoundException;
+import com.prangyajeet.mvep.exception.CouponAlreadyExistsException;
+import com.prangyajeet.mvep.exception.CouponExpiredException;
+import com.prangyajeet.mvep.exception.CouponInactiveException;
+import com.prangyajeet.mvep.exception.CouponNotFoundException;
+import com.prangyajeet.mvep.exception.InvalidCouponException;
+import com.prangyajeet.mvep.response.ApiResponse;
 
 import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
@@ -309,4 +315,86 @@ public ResponseEntity<Map<String, Object>> handleInsufficientStockException(
                 HttpStatus.BAD_REQUEST
         );
     }
+    
+    @ExceptionHandler(CouponAlreadyExistsException.class)
+    public ResponseEntity<ApiResponse<Void>> handleCouponAlreadyExistsException(
+            CouponAlreadyExistsException ex) {
+
+        ApiResponse<Void> response =
+                new ApiResponse<>(
+                        false,
+                        ex.getMessage(),
+                        null
+                );
+
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(response);
+    }
+    
+    @ExceptionHandler(CouponNotFoundException.class)
+    public ResponseEntity<ApiResponse<Void>> handleCouponNotFoundException(
+            CouponNotFoundException ex) {
+
+        ApiResponse<Void> response =
+                new ApiResponse<>(
+                        false,
+                        ex.getMessage(),
+                        null
+                );
+
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(response);
+    }
+    
+    @ExceptionHandler(CouponExpiredException.class)
+    public ResponseEntity<ApiResponse<Void>> handleCouponExpiredException(
+            CouponExpiredException ex) {
+
+        ApiResponse<Void> response =
+                new ApiResponse<>(
+                        false,
+                        ex.getMessage(),
+                        null
+                );
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(response);
+    }
+    
+    @ExceptionHandler(CouponInactiveException.class)
+    public ResponseEntity<ApiResponse<Void>> handleCouponInactiveException(
+            CouponInactiveException ex) {
+
+        ApiResponse<Void> response =
+                new ApiResponse<>(
+                        false,
+                        ex.getMessage(),
+                        null
+                );
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(response);
+    }
+    
+    @ExceptionHandler(InvalidCouponException.class)
+    public ResponseEntity<ApiResponse<Void>> handleInvalidCouponException(
+            InvalidCouponException ex) {
+
+        ApiResponse<Void> response =
+                new ApiResponse<>(
+                        false,
+                        ex.getMessage(),
+                        null
+                );
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(response);
+    }
+    
+    
 }
