@@ -1,5 +1,6 @@
 package com.prangyajeet.mvep.user.service;
 
+import com.prangyajeet.mvep.exception.UserNotFoundException;
 import com.prangyajeet.mvep.user.entity.User;
 import com.prangyajeet.mvep.user.repository.UserRepository;
 import org.springframework.stereotype.Service;
@@ -33,5 +34,23 @@ public class UserService {
 
     public User save(User user) {
         return userRepository.save(user);
+    }
+
+    public User getUserByEmail(String email) {
+
+        return userRepository.findByEmail(email)
+                .orElseThrow(() ->
+                        new UserNotFoundException(
+                                "User not found with email : " + email
+                        ));
+    }
+
+    public User getUserById(Long id) {
+
+        return userRepository.findById(id)
+                .orElseThrow(() ->
+                        new UserNotFoundException(
+                                "User not found with id : " + id
+                        ));
     }
 }
