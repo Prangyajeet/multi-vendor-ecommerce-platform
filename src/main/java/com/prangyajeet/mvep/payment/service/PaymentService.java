@@ -11,6 +11,15 @@ import com.prangyajeet.mvep.payment.dto.PaymentResponseDTO;
 import com.prangyajeet.mvep.payment.entity.Payment;
 import com.prangyajeet.mvep.payment.repository.PaymentRepository;
 import org.springframework.stereotype.Service;
+import com.prangyajeet.mvep.exception.CashfreePaymentException;
+import com.prangyajeet.mvep.exception.InvalidPaymentAmountException;
+import com.prangyajeet.mvep.exception.OrderNotFoundException;
+import com.prangyajeet.mvep.exception.PaymentAlreadyExistsException;
+import com.prangyajeet.mvep.exception.PaymentNotFoundException;
+import com.prangyajeet.mvep.user.entity.User;
+import com.prangyajeet.mvep.user.service.UserService;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -20,24 +29,45 @@ import java.util.UUID;
 @Service
 public class PaymentService {
 
-    private final PaymentRepository paymentRepository;
-    private final OrderRepository orderRepository;
-    private final CashfreeService cashfreeService;
+	private final PaymentRepository paymentRepository;
+	private final OrderRepository orderRepository;
+	private final CashfreeService cashfreeService;
+	private final UserService userService;
+   
 
-    public PaymentService(PaymentRepository paymentRepository,
-                          OrderRepository orderRepository,
-                          CashfreeService cashfreeService) {
+	public PaymentService(
+	        PaymentRepository paymentRepository,
+	        OrderRepository orderRepository,
+	        CashfreeService cashfreeService,
+	        UserService userService) {
 
-        this.paymentRepository = paymentRepository;
-        this.orderRepository = orderRepository;
-        this.cashfreeService = cashfreeService;
-    }
+	    this.paymentRepository = paymentRepository;
+	    this.orderRepository = orderRepository;
+	    this.cashfreeService = cashfreeService;
+	    this.userService = userService;
+	}
 
     public PaymentResponseDTO createPayment(PaymentRequestDTO requestDTO) {
 
-        Order order = orderRepository.findById(requestDTO.getOrderId())
-                .orElseThrow(() ->
-                        new RuntimeException("Order not found"));
+    	Order order = orderRepository.findById(requestDTO.getOrderId())
+    	        .orElseThrow(() ->
+    	                new OrderNotFoundException(
+    	                        "Order not found with id : " + requestDTO.getOrderId()
+    	                ));
+    	
+    	paymentRepository.findByOrderId(order.getId())
+        .ifPresent(payment -> {
+            throw new PaymentAlreadyExistsException(
+                    "Payment already exists for order id : " + order.getId()
+            );
+        });
+    	
+    	if (requestDTO.getAmount().compareTo(order.getTotalAmount()) != 0) {
+
+    	    throw new InvalidPaymentAmountException(
+    	            "Payment amount does not match order total."
+    	    );
+    	}
 
         if (requestDTO.getPaymentMethod() == PaymentMethod.COD) {
 
@@ -135,7 +165,7 @@ public class PaymentService {
 
                 } else {
 
-                    throw new RuntimeException(
+                    throw new CashfreePaymentException(
                             "Unable to create Cashfree Order"
                     );
 
@@ -161,10 +191,10 @@ public class PaymentService {
 
                 Payment payment =
                         paymentRepository.findById(paymentId)
-                                .orElseThrow(() ->
-                                        new RuntimeException(
-                                                "Payment not found"
-                                        ));
+                        .orElseThrow(() ->
+                        new PaymentNotFoundException(
+                                "Payment not found with id : " + paymentId
+                        ));
 
                 payment.setGatewayPaymentId(
                         gatewayPaymentId
@@ -210,11 +240,10 @@ public class PaymentService {
 
                 Payment payment =
                         paymentRepository.findById(id)
-                                .orElseThrow(() ->
-                                        new RuntimeException(
-                                                "Payment not found"
-                                        ));
-
+                        .orElseThrow(() ->
+                        new PaymentNotFoundException(
+                                "Payment not found with id : " + id
+                        ));
                 return convertToDTO(payment);
 
             }
@@ -223,14 +252,40 @@ public class PaymentService {
 
                 Payment payment =
                         paymentRepository.findByOrderId(orderId)
-                                .orElseThrow(() ->
-                                        new RuntimeException(
-                                                "Payment not found"
-                                        ));
+                        .orElseThrow(() ->
+                        new PaymentNotFoundException(
+                                "Payment not found for order id : " + orderId
+                        ));
 
                 return convertToDTO(payment);
 
             }
+            
+            public List<PaymentResponseDTO> getMyPayments() {
+
+                Authentication authentication =
+                        SecurityContextHolder
+                                .getContext()
+                                .getAuthentication();
+
+                String email = authentication.getName();
+
+                User user = userService.getUserByEmail(email);
+
+                return paymentRepository.findByOrderUserId(user.getId())
+                        .stream()
+                        .map(this::convertToDTO)
+                        .toList();
+            }
+            
+            public List<PaymentResponseDTO> getAllPaymentHistory() {
+
+                return paymentRepository.findAll()
+                        .stream()
+                        .map(this::convertToDTO)
+                        .toList();
+            }
+            
 
             private PaymentResponseDTO convertToDTO(
                     Payment payment) {

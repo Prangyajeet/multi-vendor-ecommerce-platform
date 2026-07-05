@@ -24,6 +24,10 @@ import com.prangyajeet.mvep.exception.CouponInactiveException;
 import com.prangyajeet.mvep.exception.CouponNotFoundException;
 import com.prangyajeet.mvep.exception.InvalidCouponException;
 import com.prangyajeet.mvep.response.ApiResponse;
+import com.prangyajeet.mvep.exception.PaymentNotFoundException;
+import com.prangyajeet.mvep.exception.PaymentAlreadyExistsException;
+import com.prangyajeet.mvep.exception.InvalidPaymentAmountException;
+import com.prangyajeet.mvep.exception.CashfreePaymentException;
 
 import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
@@ -396,5 +400,38 @@ public ResponseEntity<Map<String, Object>> handleInsufficientStockException(
                 .body(response);
     }
     
+    @ExceptionHandler(PaymentNotFoundException.class)
+    public ResponseEntity<ApiResponse<String>> handlePaymentNotFoundException(
+            PaymentNotFoundException ex) {
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ApiResponse.failure(ex.getMessage()));
+    }
+    
+    @ExceptionHandler(PaymentAlreadyExistsException.class)
+    public ResponseEntity<ApiResponse<String>> handlePaymentAlreadyExistsException(
+            PaymentAlreadyExistsException ex) {
+
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(ApiResponse.failure(ex.getMessage()));
+    }
+    
+    @ExceptionHandler(InvalidPaymentAmountException.class)
+    public ResponseEntity<ApiResponse<String>> handleInvalidPaymentAmountException(
+            InvalidPaymentAmountException ex) {
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.failure(ex.getMessage()));
+    }
+    
+    @ExceptionHandler(CashfreePaymentException.class)
+    public ResponseEntity<ApiResponse<String>> handleCashfreePaymentException(
+            CashfreePaymentException ex) {
+
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
+                .body(ApiResponse.failure(ex.getMessage()));
+    }
+    
     
 }
+

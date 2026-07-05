@@ -6,6 +6,7 @@ import com.prangyajeet.mvep.payment.service.PaymentService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import com.prangyajeet.mvep.response.ApiResponse;
 
 import java.util.List;
 
@@ -74,5 +75,38 @@ public class PaymentController {
                 paymentService.getPaymentByOrderId(orderId)
         );
     }
+    
+ // =====================================
+ // CUSTOMER APIs
+ // =====================================
+
+ @GetMapping("/customer/payments")
+ public ResponseEntity<ApiResponse<List<PaymentResponseDTO>>> getMyPayments() {
+
+     return ResponseEntity.ok(
+             new ApiResponse<>(
+                     true,
+                     "Customer payment history fetched successfully.",
+                     paymentService.getMyPayments()
+             )
+     );
+ }
+
+
+ // =====================================
+ // ADMIN APIs
+ // =====================================
+
+ @GetMapping("/admin/payments")
+ public ResponseEntity<ApiResponse<List<PaymentResponseDTO>>> getAllPaymentHistory() {
+
+     return ResponseEntity.ok(
+             new ApiResponse<>(
+                     true,
+                     "All payment history fetched successfully.",
+                     paymentService.getAllPaymentHistory()
+             )
+     );
+ }
 
 }
