@@ -9,6 +9,7 @@ import com.prangyajeet.mvep.orderitem.repository.OrderItemRepository;
 import com.prangyajeet.mvep.product.entity.Product;
 import com.prangyajeet.mvep.product.repository.ProductRepository;
 import org.springframework.stereotype.Service;
+import com.prangyajeet.mvep.orderitem.entity.OrderItem;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -61,6 +62,11 @@ public class OrderItemService {
                 .stream()
                 .map(this::mapToResponseDTO)
                 .collect(Collectors.toList());
+    }
+    
+    public List<OrderItem> getOrderItemEntities(Long orderId) {
+
+        return orderItemRepository.findByOrderId(orderId);
     }
 
     private OrderItemResponseDTO mapToResponseDTO(

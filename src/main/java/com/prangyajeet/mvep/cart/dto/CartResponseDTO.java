@@ -14,6 +14,7 @@ public class CartResponseDTO {
 
     private Integer quantity;
     private BigDecimal totalPrice;
+    private Integer availableStock;
 
     public CartResponseDTO() {
     }
@@ -72,5 +73,12 @@ public class CartResponseDTO {
 
     public void setTotalPrice(BigDecimal totalPrice) {
         this.totalPrice = totalPrice;
+    }
+    public Integer getAvailableStock() {
+        return availableStock;
+    }
+
+    public void setAvailableStock(Integer availableStock) {
+        this.availableStock = availableStock;
     }
 }

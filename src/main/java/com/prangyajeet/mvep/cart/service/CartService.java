@@ -146,6 +146,10 @@ public class CartService {
         responseDTO.setProductPrice(
                 cart.getProduct().getPrice()
         );
+        
+        responseDTO.setAvailableStock(
+                cart.getProduct().getStockQuantity()
+        );
 
         responseDTO.setQuantity(
                 cart.getQuantity()

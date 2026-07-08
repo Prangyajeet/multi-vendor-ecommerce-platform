@@ -5,9 +5,6 @@ import jakarta.validation.constraints.NotNull;
 
 public class CartRequestDTO {
 
-    @NotNull(message = "User Id is required")
-    private Long userId;
-
     @NotNull(message = "Product Id is required")
     private Long productId;
 
@@ -16,14 +13,6 @@ public class CartRequestDTO {
     private Integer quantity;
 
     public CartRequestDTO() {
-    }
-
-    public Long getUserId() {
-        return userId;
-    }
-
-    public void setUserId(Long userId) {
-        this.userId = userId;
     }
 
     public Long getProductId() {
@@ -41,4 +30,9 @@ public class CartRequestDTO {
     public void setQuantity(Integer quantity) {
         this.quantity = quantity;
     }
+
+	public Long getUserId() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

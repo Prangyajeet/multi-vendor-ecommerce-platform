@@ -1,11 +1,14 @@
 package com.prangyajeet.mvep.order.entity;
 
 import com.prangyajeet.mvep.common.enums.OrderStatus;
+import com.prangyajeet.mvep.orderitem.entity.OrderItem;
 import com.prangyajeet.mvep.user.entity.User;
 import jakarta.persistence.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "orders")
@@ -15,11 +18,11 @@ public class Order {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Column(nullable = false)
+    @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal totalAmount;
 
     @Enumerated(EnumType.STRING)
@@ -28,6 +31,13 @@ public class Order {
 
     @Column(nullable = false)
     private LocalDateTime orderDate;
+
+    @OneToMany(
+            mappedBy = "order",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    private List<OrderItem> orderItems = new ArrayList<>();
 
     public Order() {
     }
@@ -43,6 +53,18 @@ public class Order {
         this.totalAmount = totalAmount;
         this.orderStatus = orderStatus;
         this.orderDate = orderDate;
+    }
+
+    public void addOrderItem(OrderItem orderItem) {
+
+        orderItems.add(orderItem);
+        orderItem.setOrder(this);
+    }
+
+    public void removeOrderItem(OrderItem orderItem) {
+
+        orderItems.remove(orderItem);
+        orderItem.setOrder(null);
     }
 
     public Long getId() {
@@ -83,5 +105,13 @@ public class Order {
 
     public void setOrderDate(LocalDateTime orderDate) {
         this.orderDate = orderDate;
+    }
+
+    public List<OrderItem> getOrderItems() {
+        return orderItems;
+    }
+
+    public void setOrderItems(List<OrderItem> orderItems) {
+        this.orderItems = orderItems;
     }
 }

@@ -35,6 +35,28 @@ public class ProductService {
         this.categoryRepository = categoryRepository;
         this.vendorRepository = vendorRepository;
     }
+    
+    public void reduceStock(Long productId, Integer quantity) {
+
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() ->
+                        new ProductNotFoundException(
+                                "Product not found with id : " + productId
+                        ));
+
+        if (product.getStockQuantity() < quantity) {
+
+            throw new IllegalArgumentException(
+                    "Insufficient stock for product : " + product.getName()
+            );
+        }
+
+        product.setStockQuantity(
+                product.getStockQuantity() - quantity
+        );
+
+        productRepository.save(product);
+    }
 
     public ProductResponseDTO createProduct(ProductRequestDTO requestDTO) {
 
@@ -67,6 +89,8 @@ public class ProductService {
         Product savedProduct = productRepository.save(product);
 
         return mapToResponseDTO(savedProduct);
+        
+        
     }
 
     public List<ProductResponseDTO> getAllProducts() {

@@ -50,6 +50,21 @@ public class OrderService {
                 .map(this::mapToResponseDTO)
                 .collect(Collectors.toList());
     }
+    
+    public Order confirmOrder(Long orderId) {
+
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() ->
+                        new RuntimeException(
+                                "Order not found with id : " + orderId
+                        ));
+
+        order.setOrderStatus(OrderStatus.CONFIRMED);
+
+        System.out.println("Order " + orderId + " changed to CONFIRMED");
+
+        return orderRepository.save(order);
+    }
 
     private OrderResponseDTO mapToResponseDTO(Order order) {
 

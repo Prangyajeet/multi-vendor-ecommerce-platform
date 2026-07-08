@@ -14,30 +14,44 @@ public class OrderItem {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_id", nullable = false)
     private Order order;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
 
     @Column(nullable = false)
     private Integer quantity;
 
-    @Column(nullable = false)
+    /*
+     * Stores the unit price of the product at the time of purchase.
+     * This preserves historical pricing even if the product price changes later.
+     */
+    @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal price;
 
     public OrderItem() {
     }
 
-    public OrderItem(Long id, Order order, Product product,
-                     Integer quantity, BigDecimal price) {
+    public OrderItem(Long id,
+                     Order order,
+                     Product product,
+                     Integer quantity,
+                     BigDecimal price) {
         this.id = id;
         this.order = order;
         this.product = product;
         this.quantity = quantity;
         this.price = price;
+    }
+
+    /**
+     * Returns line total = unit price × quantity.
+     */
+    public BigDecimal getSubTotal() {
+        return price.multiply(BigDecimal.valueOf(quantity));
     }
 
     public Long getId() {
