@@ -9,12 +9,17 @@ import com.prangyajeet.mvep.orderitem.service.OrderItemService;
 import com.prangyajeet.mvep.payment.entity.Payment;
 import com.prangyajeet.mvep.payment.repository.PaymentRepository;
 import com.prangyajeet.mvep.product.service.ProductService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
 public class CashfreeWebhookService {
+
+    private static final Logger logger =
+            LoggerFactory.getLogger(CashfreeWebhookService.class);
 
     private final PaymentRepository paymentRepository;
     private final OrderService orderService;
@@ -38,13 +43,37 @@ public class CashfreeWebhookService {
 
     public void processWebhook(CashfreeWebhookDTO webhookDTO) {
 
-        System.out.println("========== PROCESSING CASHFREE WEBHOOK ==========");
+        logger.info("========== PROCESSING CASHFREE WEBHOOK ==========");
 
-        if (webhookDTO == null
-                || webhookDTO.getData() == null
-                || webhookDTO.getData().getOrder() == null) {
+        /*
+         * Null Check
+         */
+        if (webhookDTO == null) {
 
-            System.out.println("Invalid webhook payload.");
+            logger.warn("Webhook payload is null.");
+
+            return;
+        }
+
+        /*
+         * Cashfree Dashboard Test Webhook
+         */
+        if ("WEBHOOK".equalsIgnoreCase(webhookDTO.getType())) {
+
+            logger.info("Cashfree Test Webhook Received Successfully.");
+
+            return;
+        }
+
+        /*
+         * Validate Payment Webhook
+         */
+        if (webhookDTO.getData() == null
+                || webhookDTO.getData().getOrder() == null
+                || webhookDTO.getData().getPayment() == null) {
+
+            logger.warn("Invalid payment webhook payload.");
+
             return;
         }
 
@@ -60,71 +89,114 @@ public class CashfreeWebhookService {
 
         if (payment == null) {
 
-            System.out.println(
-                    "Payment not found for Cashfree Order : "
-                            + cashfreeOrderId
+            logger.warn(
+                    "Payment not found for Cashfree Order : {}",
+                    cashfreeOrderId
             );
 
             return;
         }
 
         /*
-         * Prevent duplicate webhook processing
+         * Prevent Duplicate Processing
          */
         if (payment.getPaymentStatus() == PaymentStatus.SUCCESS) {
 
-            System.out.println("Payment already processed.");
+            logger.info("Payment already processed.");
 
             return;
         }
 
         /*
-         * Update Payment Status
+         * Read Payment Status from Cashfree
          */
-        payment.setPaymentStatus(PaymentStatus.SUCCESS);
+        String paymentStatus =
+                webhookDTO.getData()
+                        .getPayment()
+                        .getPaymentStatus();
 
-        paymentRepository.save(payment);
+        if ("SUCCESS".equalsIgnoreCase(paymentStatus)) {
 
-        System.out.println("Payment Updated Successfully.");
+            payment.setPaymentStatus(PaymentStatus.SUCCESS);
 
-        /*
-         * Confirm Order
-         */
-        orderService.confirmOrder(
-                payment.getOrder().getId()
-        );
+            paymentRepository.save(payment);
 
-        System.out.println("Order Confirmed Successfully.");
+            logger.info("Payment Updated Successfully.");
 
-        /*
-         * Reduce Product Stock
-         */
-        List<OrderItem> orderItems =
-                orderItemService.getOrderItemEntities(
-                        payment.getOrder().getId()
+            /*
+             * Confirm Order
+             */
+            orderService.confirmOrder(
+                    payment.getOrder().getId()
+            );
+
+            logger.info("Order Confirmed Successfully.");
+
+            /*
+             * Reduce Product Stock
+             */
+            List<OrderItem> orderItems =
+                    orderItemService.getOrderItemEntities(
+                            payment.getOrder().getId()
+                    );
+
+            for (OrderItem orderItem : orderItems) {
+
+                productService.reduceStock(
+                        orderItem.getProduct().getId(),
+                        orderItem.getQuantity()
                 );
+            }
 
-        for (OrderItem orderItem : orderItems) {
+            logger.info("Product Stock Updated Successfully.");
 
-            productService.reduceStock(
-                    orderItem.getProduct().getId(),
-                    orderItem.getQuantity()
+            /*
+             * Clear Customer Cart
+             */
+            cartService.clearCart(
+                    payment.getOrder()
+                            .getUser()
+                            .getId()
+            );
+
+            logger.info("Customer Cart Cleared Successfully.");
+        }
+
+        else if ("FAILED".equalsIgnoreCase(paymentStatus)) {
+
+            payment.setPaymentStatus(PaymentStatus.FAILED);
+
+            paymentRepository.save(payment);
+
+            logger.warn("Payment Failed.");
+        }
+
+        else if ("PENDING".equalsIgnoreCase(paymentStatus)) {
+
+            payment.setPaymentStatus(PaymentStatus.PENDING);
+
+            paymentRepository.save(payment);
+
+            logger.info("Payment Pending.");
+        }
+
+        else if ("CANCELLED".equalsIgnoreCase(paymentStatus)) {
+
+            payment.setPaymentStatus(PaymentStatus.CANCELLED);
+
+            paymentRepository.save(payment);
+
+            logger.warn("Payment Cancelled.");
+        }
+
+        else {
+
+            logger.warn(
+                    "Unknown Payment Status : {}",
+                    paymentStatus
             );
         }
 
-        System.out.println("Product Stock Updated Successfully.");
-
-        /*
-         * Clear Customer Cart
-         */
-        cartService.clearCart(
-                payment.getOrder()
-                        .getUser()
-                        .getId()
-        );
-
-        System.out.println("Customer Cart Cleared Successfully.");
-
-        System.out.println("===============================================");
+        logger.info("========== CASHFREE WEBHOOK COMPLETED ==========");
     }
 }

@@ -43,10 +43,11 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(auth -> auth
 
-                        .requestMatchers(
-                                "/api/auth/**",
-                                "/error"
-                        ).permitAll()
+                		.requestMatchers(
+                		        "/api/auth/**",
+                		        "/api/cashfree/webhook",
+                		        "/error"
+                		).permitAll()
 
                         .requestMatchers("/api/admin/**")
                         .hasRole("ADMIN")

@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.prangyajeet.mvep.response.ApiResponse;
+import com.prangyajeet.mvep.payment.dto.PaymentVerificationResponseDTO;
 
 import java.util.List;
 
@@ -105,6 +106,19 @@ public class PaymentController {
                      true,
                      "All payment history fetched successfully.",
                      paymentService.getAllPaymentHistory()
+             )
+     );
+ }
+ 
+ @GetMapping("/customer/payments/{paymentId}/verify")
+ public ResponseEntity<PaymentVerificationResponseDTO> verifyPayment(
+
+         @PathVariable Long paymentId) {
+
+     return ResponseEntity.ok(
+
+             paymentService.verifyPayment(
+                     paymentId
              )
      );
  }

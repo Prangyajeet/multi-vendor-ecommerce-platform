@@ -20,6 +20,9 @@ import com.prangyajeet.mvep.user.entity.User;
 import com.prangyajeet.mvep.user.service.UserService;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import com.prangyajeet.mvep.payment.dto.PaymentVerificationResponseDTO;
+import com.prangyajeet.mvep.common.enums.Currency;
+
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -78,6 +81,40 @@ public class PaymentService {
         return createCashfreePayment(order, requestDTO);
 
     }
+    
+    public PaymentVerificationResponseDTO verifyPayment(
+            Long paymentId) {
+
+        Payment payment = paymentRepository.findById(paymentId)
+                .orElseThrow(() ->
+                        new PaymentNotFoundException(
+                                "Payment not found with id : "
+                                        + paymentId
+                        ));
+
+        PaymentVerificationResponseDTO response =
+                new PaymentVerificationResponseDTO();
+
+        response.setPaymentId(payment.getId());
+
+        response.setOrderId(
+                payment.getOrder().getId()
+        );
+
+        response.setPaymentStatus(
+                payment.getPaymentStatus()
+        );
+
+        response.setOrderStatus(
+                payment.getOrder().getOrderStatus()
+        );
+
+        response.setMessage(
+                "Payment verified successfully."
+        );
+
+        return response;
+    }
 
     private PaymentResponseDTO createCODPayment(Order order,
                                                 PaymentRequestDTO requestDTO) {
@@ -88,7 +125,7 @@ public class PaymentService {
 
         payment.setAmount(requestDTO.getAmount());
 
-        payment.setCurrency(requestDTO.getCurrency());
+        payment.setCurrency(Currency.INR);
 
         payment.setPaymentMethod(PaymentMethod.COD);
 
@@ -109,6 +146,10 @@ public class PaymentService {
         );
 
         orderRepository.save(order);
+        
+        System.out.println("Currency = " + payment.getCurrency());
+        System.out.println("Amount = " + payment.getAmount());
+        System.out.println("Payment Method = " + payment.getPaymentMethod());
 
         Payment savedPayment =
                 paymentRepository.save(payment);
@@ -126,7 +167,7 @@ public class PaymentService {
 
         payment.setAmount(requestDTO.getAmount());
 
-        payment.setCurrency(requestDTO.getCurrency());
+        payment.setCurrency(Currency.INR);
 
         payment.setPaymentMethod(
                 requestDTO.getPaymentMethod()
