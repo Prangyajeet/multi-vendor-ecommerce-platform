@@ -43,7 +43,7 @@ public class ProductController {
 
         return new ApiResponse<>(
                 true,
-                "Products fetched successfully",
+                "Approved products fetched successfully",
                 products
         );
     }
@@ -57,11 +57,11 @@ public class ProductController {
 
         return new ApiResponse<>(
                 true,
-                "Product fetched successfully",
+                "Approved product fetched successfully",
                 product
         );
     }
-
+    
     @GetMapping("/category/{categoryId}")
     public ApiResponse<List<ProductResponseDTO>> getProductsByCategory(
             @PathVariable Long categoryId) {

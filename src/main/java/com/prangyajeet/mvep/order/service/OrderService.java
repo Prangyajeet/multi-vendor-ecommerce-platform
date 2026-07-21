@@ -1,5 +1,8 @@
 package com.prangyajeet.mvep.order.service;
 
+import com.prangyajeet.mvep.common.enums.NotificationType;
+import com.prangyajeet.mvep.common.enums.OrderStatus;
+import com.prangyajeet.mvep.notification.service.NotificationService;
 import com.prangyajeet.mvep.order.dto.OrderRequestDTO;
 import com.prangyajeet.mvep.order.dto.OrderResponseDTO;
 import com.prangyajeet.mvep.order.entity.Order;
@@ -7,7 +10,6 @@ import com.prangyajeet.mvep.order.repository.OrderRepository;
 import com.prangyajeet.mvep.user.entity.User;
 import com.prangyajeet.mvep.user.repository.UserRepository;
 import org.springframework.stereotype.Service;
-import com.prangyajeet.mvep.common.enums.OrderStatus;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -18,11 +20,15 @@ public class OrderService {
 
     private final OrderRepository orderRepository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
 
     public OrderService(OrderRepository orderRepository,
-                        UserRepository userRepository) {
+                        UserRepository userRepository,
+                        NotificationService notificationService) {
+
         this.orderRepository = orderRepository;
         this.userRepository = userRepository;
+        this.notificationService = notificationService;
     }
 
     public OrderResponseDTO placeOrder(OrderRequestDTO requestDTO) {
@@ -40,6 +46,13 @@ public class OrderService {
 
         Order savedOrder = orderRepository.save(order);
 
+        notificationService.sendNotification(
+                user,
+                "Order Placed Successfully",
+                "Your order #" + savedOrder.getId() + " has been placed successfully.",
+                NotificationType.ORDER
+        );
+
         return mapToResponseDTO(savedOrder);
     }
 
@@ -50,7 +63,7 @@ public class OrderService {
                 .map(this::mapToResponseDTO)
                 .collect(Collectors.toList());
     }
-    
+
     public Order confirmOrder(Long orderId) {
 
         Order order = orderRepository.findById(orderId)
@@ -61,9 +74,16 @@ public class OrderService {
 
         order.setOrderStatus(OrderStatus.CONFIRMED);
 
-        System.out.println("Order " + orderId + " changed to CONFIRMED");
+        Order updatedOrder = orderRepository.save(order);
 
-        return orderRepository.save(order);
+        notificationService.sendNotification(
+                updatedOrder.getUser(),
+                "Order Confirmed",
+                "Your order #" + updatedOrder.getId() + " has been confirmed.",
+                NotificationType.ORDER
+        );
+
+        return updatedOrder;
     }
 
     private OrderResponseDTO mapToResponseDTO(Order order) {

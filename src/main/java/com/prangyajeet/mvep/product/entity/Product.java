@@ -1,6 +1,7 @@
 package com.prangyajeet.mvep.product.entity;
 
 import com.prangyajeet.mvep.category.entity.Category;
+import com.prangyajeet.mvep.common.enums.ProductStatus;
 import com.prangyajeet.mvep.vendor.entity.Vendor;
 import jakarta.persistence.*;
 
@@ -28,6 +29,10 @@ public class Product {
 
     private String imageUrl;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private ProductStatus status = ProductStatus.PENDING;
+
     @ManyToOne
     @JoinColumn(name = "category_id")
     private Category category;
@@ -39,16 +44,23 @@ public class Product {
     public Product() {
     }
 
-    public Product(Long id, String name, String description,
-                   BigDecimal price, Integer stockQuantity,
-                   String imageUrl, Category category,
+    public Product(Long id,
+                   String name,
+                   String description,
+                   BigDecimal price,
+                   Integer stockQuantity,
+                   String imageUrl,
+                   ProductStatus status,
+                   Category category,
                    Vendor vendor) {
+
         this.id = id;
         this.name = name;
         this.description = description;
         this.price = price;
         this.stockQuantity = stockQuantity;
         this.imageUrl = imageUrl;
+        this.status = status;
         this.category = category;
         this.vendor = vendor;
     }
@@ -99,6 +111,14 @@ public class Product {
 
     public void setImageUrl(String imageUrl) {
         this.imageUrl = imageUrl;
+    }
+
+    public ProductStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(ProductStatus status) {
+        this.status = status;
     }
 
     public Category getCategory() {

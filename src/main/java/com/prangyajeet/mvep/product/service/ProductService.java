@@ -2,12 +2,15 @@ package com.prangyajeet.mvep.product.service;
 
 import com.prangyajeet.mvep.category.entity.Category;
 import com.prangyajeet.mvep.category.repository.CategoryRepository;
+import com.prangyajeet.mvep.common.enums.NotificationType;
 import com.prangyajeet.mvep.exception.CategoryNotFoundException;
 import com.prangyajeet.mvep.exception.ProductNotFoundException;
 import com.prangyajeet.mvep.exception.VendorNotFoundException;
+import com.prangyajeet.mvep.notification.service.NotificationService;
 import com.prangyajeet.mvep.product.dto.ProductRequestDTO;
 import com.prangyajeet.mvep.product.dto.ProductResponseDTO;
 import com.prangyajeet.mvep.product.entity.Product;
+import com.prangyajeet.mvep.common.enums.ProductStatus;
 import com.prangyajeet.mvep.product.repository.ProductRepository;
 import com.prangyajeet.mvep.vendor.entity.Vendor;
 import com.prangyajeet.mvep.vendor.repository.VendorRepository;
@@ -27,15 +30,24 @@ public class ProductService {
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
     private final VendorRepository vendorRepository;
+    private final NotificationService notificationService;
 
-    public ProductService(ProductRepository productRepository,
-                          CategoryRepository categoryRepository,
-                          VendorRepository vendorRepository) {
+    public ProductService(
+            ProductRepository productRepository,
+            CategoryRepository categoryRepository,
+            VendorRepository vendorRepository,
+            NotificationService notificationService) {
+
         this.productRepository = productRepository;
         this.categoryRepository = categoryRepository;
         this.vendorRepository = vendorRepository;
+        this.notificationService = notificationService;
     }
-    
+
+    // =====================================================
+    // REDUCE STOCK
+    // =====================================================
+
     public void reduceStock(Long productId, Integer quantity) {
 
         Product product = productRepository.findById(productId)
@@ -56,7 +68,32 @@ public class ProductService {
         );
 
         productRepository.save(product);
+
+        if (product.getStockQuantity() == 0) {
+
+            notificationService.sendVendorNotification(
+                    product.getVendor().getUser(),
+                    "Product Out Of Stock",
+                    "Your product \"" + product.getName()
+                            + "\" is now out of stock."
+            );
+
+        } else if (product.getStockQuantity() <= 5) {
+
+            notificationService.sendVendorNotification(
+                    product.getVendor().getUser(),
+                    "Low Stock Alert",
+                    "Your product \"" + product.getName()
+                            + "\" has only "
+                            + product.getStockQuantity()
+                            + " items remaining."
+            );
+        }
     }
+
+    // =====================================================
+    // CREATE PRODUCT
+    // =====================================================
 
     public ProductResponseDTO createProduct(ProductRequestDTO requestDTO) {
 
@@ -85,21 +122,38 @@ public class ProductService {
         product.setImageUrl(requestDTO.getImageUrl());
         product.setCategory(category);
         product.setVendor(vendor);
+        product.setStatus(ProductStatus.PENDING);
 
         Product savedProduct = productRepository.save(product);
 
+        notificationService.sendNotificationToAdmins(
+                "New Product Approval Required",
+                "Vendor "
+                        + vendor.getBusinessName()
+                        + " submitted a new product \""
+                        + savedProduct.getName()
+                        + "\" for approval.",
+                NotificationType.PRODUCT
+        );
+
         return mapToResponseDTO(savedProduct);
-        
-        
     }
+
+    // =====================================================
+    // GET ALL APPROVED PRODUCTS
+    // =====================================================
 
     public List<ProductResponseDTO> getAllProducts() {
 
-        return productRepository.findAll()
+        return productRepository.findByStatus(ProductStatus.APPROVED)
                 .stream()
                 .map(this::mapToResponseDTO)
                 .collect(Collectors.toList());
     }
+
+    // =====================================================
+    // GET PRODUCT BY ID
+    // =====================================================
 
     public ProductResponseDTO getProductById(Long id) {
 
@@ -109,42 +163,69 @@ public class ProductService {
                                 "Product not found with id : " + id
                         ));
 
+        if (product.getStatus() != ProductStatus.APPROVED) {
+
+            throw new ProductNotFoundException(
+                    "Product not found with id : " + id
+            );
+        }
+
         return mapToResponseDTO(product);
     }
+
+    // =====================================================
+    // GET PRODUCTS BY CATEGORY
+    // =====================================================
 
     public List<ProductResponseDTO> getProductsByCategory(Long categoryId) {
 
         List<Product> products =
-                productRepository.findByCategoryId(categoryId);
+                productRepository.findByCategoryIdAndStatus(
+                        categoryId,
+                        ProductStatus.APPROVED
+                );
 
         return products.stream()
                 .map(this::mapToResponseDTO)
                 .collect(Collectors.toList());
     }
+
+    // =====================================================
+    // GET PRODUCTS BY VENDOR
+    // =====================================================
 
     public List<ProductResponseDTO> getProductsByVendor(Long vendorId) {
 
         List<Product> products =
-                productRepository.findProductsByVendorId(vendorId);
+                productRepository.findByVendorIdAndStatus(
+                        vendorId,
+                        ProductStatus.APPROVED
+                );
 
         return products.stream()
                 .map(this::mapToResponseDTO)
                 .collect(Collectors.toList());
     }
+    // =====================================================
+    // SEARCH PRODUCTS
+    // =====================================================
 
     public List<ProductResponseDTO> searchProducts(String keyword) {
 
         List<Product> products =
-                productRepository.findByNameContainingIgnoreCase(keyword);
+                productRepository.findByNameContainingIgnoreCaseAndStatus(
+                        keyword,
+                        ProductStatus.APPROVED
+                );
 
         return products.stream()
                 .map(this::mapToResponseDTO)
                 .collect(Collectors.toList());
     }
 
-    // ===========================
+    // =====================================================
     // PAGINATION
-    // ===========================
+    // =====================================================
 
     public Page<ProductResponseDTO> getProductsWithPagination(
             int page,
@@ -155,12 +236,23 @@ public class ProductService {
         Page<Product> productPage =
                 productRepository.findAll(pageable);
 
-        return productPage.map(this::mapToResponseDTO);
+        List<ProductResponseDTO> dtoList = productPage.getContent()
+                .stream()
+                .filter(product ->
+                        product.getStatus() == ProductStatus.APPROVED)
+                .map(this::mapToResponseDTO)
+                .toList();
+
+        return new org.springframework.data.domain.PageImpl<>(
+                dtoList,
+                pageable,
+                productPage.getTotalElements()
+        );
     }
 
-    // ===========================
+    // =====================================================
     // PAGINATION WITH SORTING
-    // ===========================
+    // =====================================================
 
     public Page<ProductResponseDTO> getProductsWithSorting(
             int page,
@@ -177,10 +269,23 @@ public class ProductService {
         Page<Product> productPage =
                 productRepository.findAll(pageable);
 
-        return productPage.map(this::mapToResponseDTO);
-    }    // ===========================
+        List<ProductResponseDTO> dtoList = productPage.getContent()
+                .stream()
+                .filter(product ->
+                        product.getStatus() == ProductStatus.APPROVED)
+                .map(this::mapToResponseDTO)
+                .toList();
+
+        return new org.springframework.data.domain.PageImpl<>(
+                dtoList,
+                pageable,
+                productPage.getTotalElements()
+        );
+    }
+
+    // =====================================================
     // FILTER PRODUCTS BY PRICE
-    // ===========================
+    // =====================================================
 
     public List<ProductResponseDTO> filterProductsByPrice(
             BigDecimal minPrice,
@@ -193,9 +298,71 @@ public class ProductService {
                 );
 
         return products.stream()
+                .filter(product ->
+                        product.getStatus() == ProductStatus.APPROVED)
                 .map(this::mapToResponseDTO)
                 .collect(Collectors.toList());
     }
+
+    // =====================================================
+    // APPROVE PRODUCT
+    // =====================================================
+
+    public ProductResponseDTO approveProduct(Long productId) {
+
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() ->
+                        new ProductNotFoundException(
+                                "Product not found with id : " + productId
+                        ));
+
+        product.setStatus(ProductStatus.APPROVED);
+
+        Product savedProduct =
+                productRepository.save(product);
+
+        notificationService.sendVendorNotification(
+                product.getVendor().getUser(),
+                "Product Approved",
+                "Congratulations! Your product \""
+                        + product.getName()
+                        + "\" has been approved and is now available for customers."
+        );
+
+        return mapToResponseDTO(savedProduct);
+    }
+
+    // =====================================================
+    // REJECT PRODUCT
+    // =====================================================
+
+    public ProductResponseDTO rejectProduct(Long productId) {
+
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() ->
+                        new ProductNotFoundException(
+                                "Product not found with id : " + productId
+                        ));
+
+        product.setStatus(ProductStatus.REJECTED);
+
+        Product savedProduct =
+                productRepository.save(product);
+
+        notificationService.sendVendorNotification(
+                product.getVendor().getUser(),
+                "Product Rejected",
+                "Your product \""
+                        + product.getName()
+                        + "\" has been rejected. Please review and update it before submitting again."
+        );
+
+        return mapToResponseDTO(savedProduct);
+    }
+
+    // =====================================================
+    // UPDATE PRODUCT
+    // =====================================================
 
     public ProductResponseDTO updateProduct(
             Long id,
@@ -231,11 +398,27 @@ public class ProductService {
         existingProduct.setCategory(category);
         existingProduct.setVendor(vendor);
 
+        existingProduct.setStatus(ProductStatus.PENDING);
+
         Product updatedProduct =
                 productRepository.save(existingProduct);
 
+        notificationService.sendNotificationToAdmins(
+                "Product Re-Approval Required",
+                "Vendor "
+                        + vendor.getBusinessName()
+                        + " updated product \""
+                        + updatedProduct.getName()
+                        + "\" and it requires approval again.",
+                NotificationType.PRODUCT
+        );
+
         return mapToResponseDTO(updatedProduct);
     }
+
+    // =====================================================
+    // DELETE PRODUCT
+    // =====================================================
 
     public void deleteProduct(Long id) {
 
@@ -247,6 +430,29 @@ public class ProductService {
 
         productRepository.delete(product);
     }
+    
+    public List<ProductResponseDTO> getAllProductsForAdmin() {
+
+        return productRepository.findAll()
+                .stream()
+                .map(this::mapToResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    public ProductResponseDTO getProductByIdForAdmin(Long id) {
+
+        Product product = productRepository.findById(id)
+                .orElseThrow(() ->
+                        new ProductNotFoundException(
+                                "Product not found with id : " + id
+                        ));
+
+        return mapToResponseDTO(product);
+    }
+
+    // =====================================================
+    // MAP ENTITY TO DTO
+    // =====================================================
 
     private ProductResponseDTO mapToResponseDTO(Product product) {
 
@@ -259,6 +465,7 @@ public class ProductService {
         responseDTO.setPrice(product.getPrice());
         responseDTO.setStockQuantity(product.getStockQuantity());
         responseDTO.setImageUrl(product.getImageUrl());
+        responseDTO.setStatus(product.getStatus());
 
         responseDTO.setCategoryId(product.getCategory().getId());
         responseDTO.setCategoryName(product.getCategory().getName());

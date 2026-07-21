@@ -81,5 +81,26 @@ public class CashfreeService {
         }
 
     }
+    
+    public Map<String, Object> createRefund(String cfOrderId,
+            BigDecimal refundAmount) {
+
+/*
+* Temporary implementation.
+* Replace with actual Cashfree Refund API integration later.
+*/
+
+Map<String, Object> response = new HashMap<>();
+
+response.put("cf_refund_id", "REFUND_" + UUID.randomUUID());
+
+response.put("refund_status", "SUCCESS");
+
+response.put("cf_order_id", cfOrderId);
+
+response.put("refund_amount", refundAmount);
+
+return response;
+}
 
 }

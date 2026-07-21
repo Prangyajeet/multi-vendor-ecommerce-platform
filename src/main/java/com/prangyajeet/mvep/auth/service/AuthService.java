@@ -4,6 +4,8 @@ import com.prangyajeet.mvep.auth.dto.LoginRequest;
 import com.prangyajeet.mvep.auth.dto.LoginResponse;
 import com.prangyajeet.mvep.auth.dto.RegisterRequest;
 import com.prangyajeet.mvep.auth.dto.RegisterResponse;
+import com.prangyajeet.mvep.common.enums.NotificationType;
+import com.prangyajeet.mvep.notification.service.NotificationService;
 import com.prangyajeet.mvep.security.JwtUtil;
 import com.prangyajeet.mvep.user.entity.Role;
 import com.prangyajeet.mvep.user.entity.User;
@@ -21,16 +23,19 @@ public class AuthService {
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
+    private final NotificationService notificationService;
 
     public AuthService(UserService userService,
                        RoleRepository roleRepository,
                        PasswordEncoder passwordEncoder,
-                       JwtUtil jwtUtil) {
+                       JwtUtil jwtUtil,
+                       NotificationService notificationService) {
 
         this.userService = userService;
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
+        this.notificationService = notificationService;
     }
 
     public boolean isEmailAlreadyRegistered(String email) {
@@ -64,9 +69,30 @@ public class AuthService {
 
         user.setRole(role);
 
-        userService.save(user);
+        User savedUser = userService.save(user);
 
-        return new RegisterResponse("Registration successful");
+        /*
+         * Welcome Notification
+         */
+        notificationService.sendWelcomeNotification(
+                savedUser
+        );
+
+        /*
+         * Notify Admins
+         */
+        notificationService.sendNotificationToAdmins(
+                "New User Registration",
+                savedUser.getFirstName() + " "
+                        + savedUser.getLastName()
+                        + " has registered as "
+                        + savedUser.getRole().getName(),
+                NotificationType.SYSTEM
+        );
+
+        return new RegisterResponse(
+                "Registration successful"
+        );
     }
 
     public LoginResponse login(LoginRequest request) {

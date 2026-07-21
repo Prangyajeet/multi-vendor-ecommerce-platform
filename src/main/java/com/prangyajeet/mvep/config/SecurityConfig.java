@@ -3,6 +3,7 @@ package com.prangyajeet.mvep.config;
 import com.prangyajeet.mvep.security.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -43,45 +44,88 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(auth -> auth
 
-                		.requestMatchers(
-                		        "/api/auth/**",
-                		        "/api/cashfree/webhook",
-                		        "/error"
-                		).permitAll()
+                        // Public APIs
+                        .requestMatchers(
+                                "/api/auth/**",
+                                "/api/cashfree/webhook",
+                                "/error"
+                        ).permitAll()
 
+                        // =======================
+                        // ADMIN APIs
+                        // =======================
                         .requestMatchers("/api/admin/**")
                         .hasRole("ADMIN")
 
+                        // =======================
+                        // VENDOR APIs
+                        // =======================
                         .requestMatchers("/api/vendor/**")
                         .hasRole("VENDOR")
 
+                        // =======================
+                        // CUSTOMER APIs
+                        // =======================
                         .requestMatchers("/api/customer/**")
                         .hasRole("CUSTOMER")
 
-                        .anyRequest().authenticated()
+                        // =======================
+                        // NOTIFICATION APIs
+                        // =======================
+
+                        // Logged-in user's notifications
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/notifications/me")
+                        .hasAnyRole("CUSTOMER", "VENDOR", "ADMIN")
+
+                        // View notification by ID
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/notifications/*")
+                        .hasAnyRole("CUSTOMER", "VENDOR", "ADMIN")
+
+                        // Mark notification as read
+                        .requestMatchers(HttpMethod.PUT,
+                                "/api/notifications/*/read")
+                        .hasAnyRole("CUSTOMER", "VENDOR", "ADMIN")
+
+                        // Delete notification
+                        .requestMatchers(HttpMethod.DELETE,
+                                "/api/notifications/*")
+                        .hasAnyRole("CUSTOMER", "VENDOR", "ADMIN")
+
+                        // Create notification
+                        .requestMatchers(HttpMethod.POST,
+                                "/api/notifications")
+                        .authenticated()
+
+                        // Any other request
+                        .anyRequest()
+                        .authenticated()
                 )
 
-                .exceptionHandling(exception -> exception
+                .exceptionHandling(exception ->
 
-                        .authenticationEntryPoint(
-                                (request, response, authException) -> {
-                                    response.setStatus(
-                                            HttpStatus.UNAUTHORIZED.value()
-                                    );
-                                    response.getWriter()
-                                            .write("Unauthorized");
-                                }
-                        )
+                        exception
 
-                        .accessDeniedHandler(
-                                (request, response, accessDeniedException) -> {
-                                    response.setStatus(
-                                            HttpStatus.FORBIDDEN.value()
-                                    );
-                                    response.getWriter()
-                                            .write("Access Denied");
-                                }
-                        )
+                                .authenticationEntryPoint(
+                                        (request, response, authException) -> {
+                                            response.setStatus(
+                                                    HttpStatus.UNAUTHORIZED.value()
+                                            );
+                                            response.getWriter()
+                                                    .write("Unauthorized");
+                                        }
+                                )
+
+                                .accessDeniedHandler(
+                                        (request, response, accessDeniedException) -> {
+                                            response.setStatus(
+                                                    HttpStatus.FORBIDDEN.value()
+                                            );
+                                            response.getWriter()
+                                                    .write("Access Denied");
+                                        }
+                                )
                 );
 
         http.addFilterBefore(

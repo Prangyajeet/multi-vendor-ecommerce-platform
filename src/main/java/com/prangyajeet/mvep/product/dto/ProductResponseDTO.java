@@ -1,5 +1,7 @@
 package com.prangyajeet.mvep.product.dto;
 
+import com.prangyajeet.mvep.common.enums.ProductStatus;
+
 import java.math.BigDecimal;
 
 public class ProductResponseDTO {
@@ -10,6 +12,8 @@ public class ProductResponseDTO {
     private BigDecimal price;
     private Integer stockQuantity;
     private String imageUrl;
+
+    private ProductStatus status;
 
     private Long categoryId;
     private String categoryName;
@@ -66,6 +70,14 @@ public class ProductResponseDTO {
 
     public void setImageUrl(String imageUrl) {
         this.imageUrl = imageUrl;
+    }
+
+    public ProductStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(ProductStatus status) {
+        this.status = status;
     }
 
     public Long getCategoryId() {

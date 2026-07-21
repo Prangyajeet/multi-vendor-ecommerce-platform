@@ -4,7 +4,9 @@ import com.prangyajeet.mvep.exception.UserNotFoundException;
 import com.prangyajeet.mvep.user.entity.User;
 import com.prangyajeet.mvep.user.repository.UserRepository;
 import org.springframework.stereotype.Service;
+import com.prangyajeet.mvep.common.enums.RoleName;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -52,5 +54,12 @@ public class UserService {
                         new UserNotFoundException(
                                 "User not found with id : " + id
                         ));
+    }
+    
+    public List<User> getAllAdmins() {
+
+        return userRepository.findByRole_Name(
+                RoleName.ADMIN
+        );
     }
 }
