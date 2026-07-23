@@ -153,11 +153,7 @@ public class CashfreeWebhookService {
             /*
              * Clear Customer Cart
              */
-            cartService.clearCart(
-                    payment.getOrder()
-                            .getUser()
-                            .getId()
-            );
+            cartService.clearCart();
 
             logger.info("Customer Cart Cleared Successfully.");
         }

@@ -30,9 +30,4 @@ public class CartRequestDTO {
     public void setQuantity(Integer quantity) {
         this.quantity = quantity;
     }
-
-	public Long getUserId() {
-		// TODO Auto-generated method stub
-		return null;
-	}
 }

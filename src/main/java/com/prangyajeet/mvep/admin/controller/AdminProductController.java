@@ -22,7 +22,7 @@ public class AdminProductController {
 
         return new ApiResponse<>(
                 true,
-                "All products fetched successfully",
+                "All products fetched successfully.",
                 productService.getAllProductsForAdmin()
         );
     }
@@ -33,7 +33,7 @@ public class AdminProductController {
 
         return new ApiResponse<>(
                 true,
-                "Product fetched successfully",
+                "Product fetched successfully.",
                 productService.getProductByIdForAdmin(id)
         );
     }
@@ -44,7 +44,7 @@ public class AdminProductController {
 
         return new ApiResponse<>(
                 true,
-                "Product approved successfully",
+                "Product approved successfully.",
                 productService.approveProduct(id)
         );
     }
@@ -55,7 +55,7 @@ public class AdminProductController {
 
         return new ApiResponse<>(
                 true,
-                "Product rejected successfully",
+                "Product rejected successfully.",
                 productService.rejectProduct(id)
         );
     }

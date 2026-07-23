@@ -1,5 +1,6 @@
 package com.prangyajeet.mvep.vendor.repository;
 
+import com.prangyajeet.mvep.user.entity.User;
 import com.prangyajeet.mvep.vendor.entity.Vendor;
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -9,8 +10,9 @@ public interface VendorRepository extends JpaRepository<Vendor, Long> {
 
     Optional<Vendor> findByUserId(Long userId);
 
+    Optional<Vendor> findByUser(User user);
+
     Optional<Vendor> findByGstNumber(String gstNumber);
 
     Optional<Vendor> findByBusinessName(String businessName);
-
 }

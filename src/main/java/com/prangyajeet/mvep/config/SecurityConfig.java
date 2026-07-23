@@ -50,6 +50,11 @@ public class SecurityConfig {
                                 "/api/cashfree/webhook",
                                 "/error"
                         ).permitAll()
+                        
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/products/**"
+                        ).permitAll()
 
                         // =======================
                         // ADMIN APIs

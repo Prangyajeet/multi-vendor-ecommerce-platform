@@ -30,9 +30,6 @@ public class ProductRequestDTO {
     @NotNull(message = "Category is required")
     private Long categoryId;
 
-    @NotNull(message = "Vendor is required")
-    private Long vendorId;
-
     public ProductRequestDTO() {
     }
 
@@ -82,13 +79,5 @@ public class ProductRequestDTO {
 
     public void setCategoryId(Long categoryId) {
         this.categoryId = categoryId;
-    }
-
-    public Long getVendorId() {
-        return vendorId;
-    }
-
-    public void setVendorId(Long vendorId) {
-        this.vendorId = vendorId;
     }
 }

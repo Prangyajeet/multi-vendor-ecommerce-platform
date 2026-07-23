@@ -239,14 +239,18 @@ public class NotificationService {
     public void sendVendorNotification(
             User vendor,
             String title,
-            String message) {
+            String message,
+            NotificationType notificationType) {
 
-        sendNotification(
-                vendor,
-                title,
-                message,
-                NotificationType.SYSTEM
-        );
+        Notification notification = new Notification();
+
+        notification.setUser(vendor);
+        notification.setTitle(title);
+        notification.setMessage(message);
+        notification.setNotificationType(notificationType);
+        notification.setRead(false);
+
+        notificationRepository.save(notification);
     }
 
     /**

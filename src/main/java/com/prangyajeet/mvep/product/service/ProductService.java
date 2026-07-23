@@ -19,6 +19,10 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import com.prangyajeet.mvep.user.entity.User;
+import com.prangyajeet.mvep.user.repository.UserRepository;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -30,18 +34,42 @@ public class ProductService {
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
     private final VendorRepository vendorRepository;
+    private final UserRepository userRepository;
     private final NotificationService notificationService;
+    private static final int LOW_STOCK_THRESHOLD = 10;
 
     public ProductService(
             ProductRepository productRepository,
             CategoryRepository categoryRepository,
             VendorRepository vendorRepository,
+            UserRepository userRepository,
             NotificationService notificationService) {
-
+    	
         this.productRepository = productRepository;
         this.categoryRepository = categoryRepository;
         this.vendorRepository = vendorRepository;
+        this.userRepository = userRepository;
         this.notificationService = notificationService;
+    }
+    
+    private Vendor getLoggedInVendor() {
+
+        String email = SecurityContextHolder
+                .getContext()
+                .getAuthentication()
+                .getName();
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() ->
+                        new RuntimeException(
+                                "Logged-in user not found."
+                        ));
+
+        return vendorRepository.findByUserId(user.getId())
+                .orElseThrow(() ->
+                        new VendorNotFoundException(
+                                "Vendor profile not found."
+                        ));
     }
 
     // =====================================================
@@ -67,26 +95,28 @@ public class ProductService {
                 product.getStockQuantity() - quantity
         );
 
-        productRepository.save(product);
+        Product updatedProduct = productRepository.save(product);
 
-        if (product.getStockQuantity() == 0) {
+        if (updatedProduct.getStockQuantity() == 0) {
 
             notificationService.sendVendorNotification(
-                    product.getVendor().getUser(),
-                    "Product Out Of Stock",
-                    "Your product \"" + product.getName()
-                            + "\" is now out of stock."
+                    updatedProduct.getVendor().getUser(),
+                    "Out of Stock",
+                    "Your product \"" + updatedProduct.getName()
+                            + "\" is now out of stock. Please restock it.",
+                    NotificationType.PRODUCT
             );
 
-        } else if (product.getStockQuantity() <= 5) {
+        } else if (updatedProduct.getStockQuantity() <= LOW_STOCK_THRESHOLD) {
 
             notificationService.sendVendorNotification(
-                    product.getVendor().getUser(),
+                    updatedProduct.getVendor().getUser(),
                     "Low Stock Alert",
-                    "Your product \"" + product.getName()
-                            + "\" has only "
-                            + product.getStockQuantity()
-                            + " items remaining."
+                    "Your product \"" + updatedProduct.getName()
+                            + "\" is running low on stock. Only "
+                            + updatedProduct.getStockQuantity()
+                            + " item(s) remaining.",
+                    NotificationType.PRODUCT
             );
         }
     }
@@ -105,14 +135,7 @@ public class ProductService {
                                 + requestDTO.getCategoryId()
                 ));
 
-        Vendor vendor = vendorRepository.findById(
-                requestDTO.getVendorId()
-        ).orElseThrow(() ->
-                new VendorNotFoundException(
-                        "Vendor not found with id : "
-                                + requestDTO.getVendorId()
-                ));
-
+        Vendor vendor = getLoggedInVendor();
         Product product = new Product();
 
         product.setName(requestDTO.getName());
@@ -326,9 +349,9 @@ public class ProductService {
                 "Product Approved",
                 "Congratulations! Your product \""
                         + product.getName()
-                        + "\" has been approved and is now available for customers."
+                        + "\" has been approved and is now available for customers.",
+                NotificationType.PRODUCT
         );
-
         return mapToResponseDTO(savedProduct);
     }
 
@@ -354,9 +377,9 @@ public class ProductService {
                 "Product Rejected",
                 "Your product \""
                         + product.getName()
-                        + "\" has been rejected. Please review and update it before submitting again."
+                        + "\" has been rejected. Please review and update it before submitting again.",
+                NotificationType.PRODUCT
         );
-
         return mapToResponseDTO(savedProduct);
     }
 
@@ -382,13 +405,14 @@ public class ProductService {
                                 + requestDTO.getCategoryId()
                 ));
 
-        Vendor vendor = vendorRepository.findById(
-                requestDTO.getVendorId()
-        ).orElseThrow(() ->
-                new VendorNotFoundException(
-                        "Vendor not found with id : "
-                                + requestDTO.getVendorId()
-                ));
+        Vendor vendor = getLoggedInVendor();
+        
+        if (!existingProduct.getVendor().getId().equals(vendor.getId())) {
+
+            throw new RuntimeException(
+                    "You are not authorized to update this product."
+            );
+        }
 
         existingProduct.setName(requestDTO.getName());
         existingProduct.setDescription(requestDTO.getDescription());
@@ -428,6 +452,15 @@ public class ProductService {
                                 "Product not found with id : " + id
                         ));
 
+        Vendor vendor = getLoggedInVendor();
+
+        if (!product.getVendor().getId().equals(vendor.getId())) {
+
+            throw new RuntimeException(
+                    "You are not authorized to delete this product."
+            );
+        }
+
         productRepository.delete(product);
     }
     
@@ -449,6 +482,43 @@ public class ProductService {
 
         return mapToResponseDTO(product);
     }
+    
+ // =====================================================
+ // GET LOGGED-IN VENDOR PRODUCTS
+ // =====================================================
+
+ public List<ProductResponseDTO> getMyProducts() {
+
+     Vendor vendor = getLoggedInVendor();
+
+     return productRepository.findProductsByVendorId(vendor.getId())
+             .stream()
+             .map(this::mapToResponseDTO)
+             .collect(Collectors.toList());
+ }
+
+ // =====================================================
+ // GET MY PRODUCT BY ID
+ // =====================================================
+
+ public ProductResponseDTO getMyProductById(Long productId) {
+
+     Vendor vendor = getLoggedInVendor();
+
+     Product product = productRepository.findById(productId)
+             .orElseThrow(() ->
+                     new ProductNotFoundException(
+                             "Product not found with id : " + productId
+                     ));
+
+     if (!product.getVendor().getId().equals(vendor.getId())) {
+         throw new RuntimeException(
+                 "You are not authorized to access this product."
+         );
+     }
+
+     return mapToResponseDTO(product);
+ }
 
     // =====================================================
     // MAP ENTITY TO DTO

@@ -66,7 +66,7 @@ this.productService = productService;
 
         // Load cart
         List<CartResponseDTO> cartItems =
-                cartService.getUserCart(user.getId());
+        		cartService.getMyCart();
 
         // Check if cart is empty
         if (cartItems.isEmpty()) {
@@ -126,7 +126,11 @@ this.productService = productService;
                     orderItemRequestDTO
             );
 
-            
+            // Reduce stock after creating order item
+            productService.reduceStock(
+                    item.getProductId(),
+                    item.getQuantity()
+            );
         }
         
         PaymentRequestDTO paymentRequestDTO = new PaymentRequestDTO();
@@ -170,6 +174,8 @@ this.productService = productService;
         responseDTO.setMessage(
                 "Checkout completed successfully."
         );
+        
+        cartService.clearCart();
         
         return responseDTO;
     }

@@ -67,8 +67,9 @@ public class VendorService {
          */
         notificationService.sendVendorNotification(
                 user,
-                "Vendor Registration Submitted",
-                "Your vendor registration has been submitted successfully and is awaiting admin approval."
+                "Vendor Registration Successful",
+                "Your vendor registration request has been submitted successfully. Please wait for admin approval.",
+                NotificationType.VENDOR
         );
 
         /*
