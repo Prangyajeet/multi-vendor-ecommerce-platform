@@ -3,6 +3,9 @@ import { API_BASE_URL } from "../constants/apiConstants";
 
 const axiosInstance = axios.create({
   baseURL: API_BASE_URL,
+  headers: {
+    "Content-Type": "application/json",
+  },
 });
 
 axiosInstance.interceptors.request.use(
@@ -22,19 +25,22 @@ axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response) {
-      const status = error.response.status;
+      switch (error.response.status) {
+        case 401:
+          localStorage.removeItem("token");
+          localStorage.removeItem("userId");
+          localStorage.removeItem("email");
+          localStorage.removeItem("role");
 
-      if (status === 401) {
-        localStorage.removeItem("token");
-        localStorage.removeItem("userId");
-        localStorage.removeItem("email");
-        localStorage.removeItem("role");
+          window.location.href = "/login";
+          break;
 
-        window.location.href = "/login";
-      }
+        case 403:
+          console.error("Access Denied");
+          break;
 
-      if (status === 403) {
-        console.error("Access Denied");
+        default:
+          break;
       }
     }
 
