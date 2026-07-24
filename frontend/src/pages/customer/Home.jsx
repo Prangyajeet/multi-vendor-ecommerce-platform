@@ -1,21 +1,30 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+
 import CustomerLayout from "../../layouts/CustomerLayout";
 import ProfileCard from "../../components/customer/ProfileCard";
 import DashboardCard from "../../components/customer/DashboardCard";
+
 import {
     getCustomerDashboard,
     getCustomerProfile,
 } from "../../services/customerService";
 
 const Home = () => {
+
+    const navigate = useNavigate();
+
     const [profile, setProfile] = useState(null);
     const [dashboardMessage, setDashboardMessage] = useState("");
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
 
     useEffect(() => {
+
         const loadDashboard = async () => {
+
             try {
+
                 setLoading(true);
 
                 const [profileData, dashboardData] = await Promise.all([
@@ -25,14 +34,21 @@ const Home = () => {
 
                 setProfile(profileData);
                 setDashboardMessage(dashboardData);
+
             } catch (err) {
+
                 setError(err || "Failed to load dashboard.");
+
             } finally {
+
                 setLoading(false);
+
             }
+
         };
 
         loadDashboard();
+
     }, []);
 
     if (loading) {
@@ -61,6 +77,7 @@ const Home = () => {
 
     return (
         <CustomerLayout>
+
             <div className="max-w-7xl mx-auto p-6">
 
                 {/* Welcome Banner */}
@@ -68,9 +85,7 @@ const Home = () => {
                 <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl text-white p-8 shadow-lg mb-8">
 
                     <h1 className="text-4xl font-bold">
-                        Welcome Back,
-                        {" "}
-                        {profile?.firstName} 👋
+                        Welcome Back, {profile?.firstName} 👋
                     </h1>
 
                     <p className="mt-3 text-blue-100">
@@ -79,7 +94,7 @@ const Home = () => {
 
                 </div>
 
-                {/* Profile + Overview */}
+                {/* Profile + Dashboard Cards */}
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
 
@@ -135,7 +150,10 @@ const Home = () => {
 
                     <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
 
-                        <button className="rounded-xl bg-blue-600 text-white py-3 hover:bg-blue-700 transition">
+                        <button
+                            onClick={() => navigate("/customer/shop")}
+                            className="rounded-xl bg-blue-600 text-white py-3 hover:bg-blue-700 transition"
+                        >
                             Products
                         </button>
 
@@ -168,13 +186,14 @@ const Home = () => {
                     </h2>
 
                     <p className="text-gray-500">
-                        Your recent orders, wishlist updates, payments, and
-                        notifications will appear here in the upcoming modules.
+                        Your recent orders, wishlist updates, payments and notifications
+                        will appear here in upcoming modules.
                     </p>
 
                 </div>
 
             </div>
+
         </CustomerLayout>
     );
 };

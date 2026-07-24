@@ -6,6 +6,7 @@ import Register from "../pages/auth/Register";
 import AdminDashboard from "../pages/admin/Dashboard";
 import VendorDashboard from "../pages/vendor/Dashboard";
 import Home from "../pages/customer/Home";
+import Shop from "../pages/customer/Shop";
 
 import ProtectedRoute from "./ProtectedRoute";
 
@@ -46,6 +47,15 @@ function AppRoutes() {
         element={
           <ProtectedRoute allowedRoles={["CUSTOMER"]}>
             <Home />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/customer/shop"
+        element={
+          <ProtectedRoute allowedRoles={["CUSTOMER"]}>
+            <Shop />
           </ProtectedRoute>
         }
       />
